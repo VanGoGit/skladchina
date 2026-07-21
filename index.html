@@ -828,6 +828,8 @@
             .expense-item .edit-mode .edit-row .field-sm { flex: 1 1 80px; }
         }
     </style>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 </head>
 <body>
     <div class="app" id="app">
@@ -942,6 +944,24 @@
                 if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleTheme(); }
             });
 
+            // ====== FIREBASE (общие данные для всех, кто открывает ссылку) ======
+            // Вставь сюда свои значения из Firebase Console (Project Settings → General → Your apps)
+            const firebaseConfig = {
+                apiKey: "AIzaSyCFr2ii-S0FOTiy438ZkQRlXxSplo6PM-A",
+                authDomain: "skladchina-7b420.firebaseapp.com",
+                projectId: "skladchina-7b420",
+                storageBucket: "skladchina-7b420.firebasestorage.app",
+                messagingSenderId: "1033592953110",
+                appId: "1:1033592953110:web:5e66aa2a5ec1aea40f9837"
+            };
+
+            const FIREBASE_ENABLED = firebaseConfig.apiKey !== "ВСТАВЬ_СЮДА_apiKey";
+            let db = null;
+            if (FIREBASE_ENABLED) {
+                firebase.initializeApp(firebaseConfig);
+                db = firebase.firestore();
+            }
+
             let events = [];
             let activeEventId = null;
             let idCounter = 0;
@@ -980,27 +1000,58 @@
                 return ev.expenses.find(e => e.id === id) || null;
             }
 
-            function saveState() {
-                localStorage.setItem('expenseAppData', JSON.stringify({
-                    events, activeEventId, idCounter
-                }));
+            function applyRemoteData(data) {
+                events = (data && data.events) || [];
+                idCounter = (data && data.idCounter) || 0;
+                if (activeEventId && !events.some(e => e.id === activeEventId)) {
+                    activeEventId = events.length > 0 ? events[0].id : null;
+                }
+                renderAll();
             }
 
-            function loadState() {
-                const raw = localStorage.getItem('expenseAppData');
-                if (raw) {
-                    try {
-                        const data = JSON.parse(raw);
-                        events = data.events || [];
-                        activeEventId = data.activeEventId || null;
-                        idCounter = data.idCounter || 0;
-                        if (activeEventId && !events.some(e => e.id === activeEventId)) {
-                            activeEventId = events.length > 0 ? events[0].id : null;
-                        }
-                        return true;
-                    } catch (e) { return false; }
+            function saveState() {
+                // Какое событие сейчас открыто — личная настройка этого браузера, не шарим её
+                if (activeEventId) {
+                    localStorage.setItem('activeEventId', activeEventId);
+                } else {
+                    localStorage.removeItem('activeEventId');
                 }
-                return false;
+
+                if (FIREBASE_ENABLED && db) {
+                    db.doc('sharedData/main').set({ events, idCounter }).catch(err => {
+                        console.error('Firebase save error:', err);
+                        showToast('Не удалось сохранить в облако');
+                    });
+                } else {
+                    localStorage.setItem('expenseAppData', JSON.stringify({ events, idCounter }));
+                }
+            }
+
+            function loadLocalActiveEvent() {
+                const saved = localStorage.getItem('activeEventId');
+                activeEventId = saved ? parseInt(saved) : null;
+            }
+
+            function startSync() {
+                loadLocalActiveEvent();
+
+                if (FIREBASE_ENABLED && db) {
+                    db.doc('sharedData/main').onSnapshot(
+                        docSnap => applyRemoteData(docSnap.exists ? docSnap.data() : { events: [], idCounter: 0 }),
+                        err => {
+                            console.error('Firebase sync error:', err);
+                            showToast('Нет связи с облаком');
+                        }
+                    );
+                } else {
+                    const raw = localStorage.getItem('expenseAppData');
+                    let data = { events: [], idCounter: 0 };
+                    if (raw) {
+                        try { data = JSON.parse(raw); } catch (e) { /* оставляем пустые данные */ }
+                    }
+                    applyRemoteData(data);
+                    showToast('Работает локально — настрой Firebase для общего доступа');
+                }
             }
 
             function renderEvents() {
@@ -1603,13 +1654,7 @@
 
             function init() {
                 loadTheme();
-                const loaded = loadState();
-                if (!loaded || events.length === 0) {
-                    events = [];
-                    activeEventId = null;
-                    saveState();
-                }
-                renderAll();
+                startSync();
 
                 addEventBtn.addEventListener('click', createEvent);
                 eventNameInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') createEvent(); });
