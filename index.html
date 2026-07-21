@@ -1,0 +1,1631 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=JetBrains+Mono:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <title>Складчина — калькулятор общих расходов</title>
+    <style>
+        :root {
+            /* Paper & surfaces */
+            --bg-body: #E7E1D2;
+            --bg-app: #FBF9F2;
+            --bg-section: #F3EEE1;
+            --bg-input: #FFFFFF;
+            --bg-chip: #EDE6D3;
+            --bg-chip-active: #1F5D4E;
+            --bg-result: #FAF1D9;
+
+            /* Ink */
+            --text-primary: #2A251F;
+            --text-secondary: #6D6355;
+            --text-muted: #9C927E;
+            --text-chip-active: #FBF9F2;
+
+            /* Lines */
+            --border-light: #D9CFB3;
+            --border-section: #E1D8BE;
+            --border-result: #DFC06B;
+
+            /* Shadow */
+            --shadow: 0 24px 60px -20px rgba(42, 37, 31, 0.25), 0 4px 14px rgba(42, 37, 31, 0.06);
+
+            /* Accents */
+            --accent: #1F5D4E;
+            --accent-hover: #163F35;
+            --success: #1F5D4E;
+            --success-hover: #163F35;
+            --danger: #9C3245;
+            --danger-hover: #7A2534;
+            --gold: #B8860B;
+
+            --chip-remove: #9C927E;
+            --chip-remove-hover: #9C3245;
+            --debt-from: #9C3245;
+            --debt-to: #1F5D4E;
+
+            --toggle-bg: #DED4B7;
+            --toggle-dot: #FBF9F2;
+            --toggle-active: #1F5D4E;
+
+            --checkbox-bg: #FFFFFF;
+            --checkbox-border: #D9CFB3;
+            --checkbox-checked: #1F5D4E;
+
+            --toast-bg: #2A251F;
+            --toast-text: #FAF1D9;
+
+            /* Type */
+            --font-display: 'Fraunces', Georgia, serif;
+            --font-mono: 'JetBrains Mono', 'SF Mono', monospace;
+            --font-body: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+
+            --radius-app: 24px;
+            --radius-section: 14px;
+            --radius-input: 10px;
+            --radius-chip: 999px;
+            --radius-btn: 999px;
+
+            --spacing-xs: 6px;
+            --spacing-sm: 10px;
+            --spacing-md: 16px;
+            --spacing-lg: 24px;
+            --spacing-xl: 32px;
+        }
+
+        body.dark-theme {
+            --bg-body: #131210;
+            --bg-app: #1D1B16;
+            --bg-section: #262319;
+            --bg-input: #2C281E;
+            --bg-chip: #322D21;
+            --bg-chip-active: #3FA88C;
+            --bg-result: #2A2410;
+
+            --text-primary: #EDE6D4;
+            --text-secondary: #B3A88E;
+            --text-muted: #857B66;
+            --text-chip-active: #14261F;
+
+            --border-light: #3A3527;
+            --border-section: #3A3527;
+            --border-result: #6B5620;
+
+            --shadow: 0 24px 60px -20px rgba(0, 0, 0, 0.6), 0 4px 14px rgba(0, 0, 0, 0.35);
+
+            --accent: #3FA88C;
+            --accent-hover: #57C2A4;
+            --success: #3FA88C;
+            --success-hover: #57C2A4;
+            --danger: #D9707B;
+            --danger-hover: #E89298;
+            --gold: #D9B14A;
+
+            --chip-remove: #857B66;
+            --chip-remove-hover: #D9707B;
+            --debt-from: #D9707B;
+            --debt-to: #3FA88C;
+
+            --toggle-bg: #322D21;
+            --toggle-dot: #EDE6D4;
+            --toggle-active: #3FA88C;
+
+            --checkbox-bg: #2C281E;
+            --checkbox-border: #4A4432;
+            --checkbox-checked: #3FA88C;
+
+            --toast-bg: #EDE6D4;
+            --toast-text: #1D1B16;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: var(--font-body);
+            background: var(--bg-body);
+            background-image:
+                radial-gradient(circle at 1px 1px, rgba(42, 37, 31, 0.05) 1px, transparent 0);
+            background-size: 4px 4px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 30px 16px;
+            color: var(--text-primary);
+            transition: background 0.4s, color 0.4s;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        body.dark-theme {
+            background-image:
+                radial-gradient(circle at 1px 1px, rgba(255, 255, 255, 0.035) 1px, transparent 0);
+            background-size: 4px 4px;
+        }
+
+        .app {
+            max-width: 660px;
+            width: 100%;
+            background: var(--bg-app);
+            border-radius: var(--radius-app);
+            box-shadow: var(--shadow);
+            padding: var(--spacing-xl);
+            transition: background 0.4s, box-shadow 0.4s;
+            position: relative;
+        }
+
+        .app-top {
+            padding-bottom: var(--spacing-md);
+        }
+
+        /* Torn / perforated receipt edge — the page's signature motif */
+        .tear-edge {
+            height: 15px;
+            margin: var(--spacing-md) calc(-1 * var(--spacing-xl)) var(--spacing-lg);
+            background-image: radial-gradient(circle at 10px 0, var(--bg-body) 8px, transparent 8.5px);
+            background-repeat: repeat-x;
+            background-size: 20px 15px;
+            background-position: top center;
+            transition: background-image 0.4s;
+        }
+
+        .app-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 2px;
+        }
+        .eyebrow {
+            display: block;
+            font-family: var(--font-mono);
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: 0.18em;
+            text-transform: uppercase;
+            color: var(--accent);
+            margin-bottom: 6px;
+            transition: color 0.3s;
+        }
+        .app-header h1 {
+            font-family: var(--font-display);
+            font-size: 32px;
+            font-weight: 600;
+            letter-spacing: -0.01em;
+            margin: 0;
+            color: var(--text-primary);
+            transition: color 0.3s;
+        }
+        .theme-toggle {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            user-select: none;
+            margin-top: 6px;
+        }
+        .theme-toggle .toggle-track {
+            width: 44px;
+            height: 25px;
+            background: var(--toggle-bg);
+            border-radius: 30px;
+            position: relative;
+            transition: background 0.3s;
+            flex-shrink: 0;
+        }
+        .theme-toggle .toggle-track .toggle-dot {
+            width: 19px;
+            height: 19px;
+            background: var(--toggle-dot);
+            border-radius: 50%;
+            position: absolute;
+            top: 3px;
+            left: 3px;
+            transition: transform 0.3s, background 0.3s;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+        }
+        body.dark-theme .theme-toggle .toggle-track {
+            background: var(--toggle-active);
+        }
+        body.dark-theme .theme-toggle .toggle-track .toggle-dot {
+            transform: translateX(19px);
+        }
+        .theme-toggle .toggle-label {
+            font-size: 12px;
+            font-weight: 500;
+            color: var(--text-secondary);
+            transition: color 0.3s;
+        }
+
+        .subhead {
+            color: var(--text-secondary);
+            font-size: 14.5px;
+            margin-bottom: var(--spacing-lg);
+            padding-left: 14px;
+            border-left: 2px solid var(--border-result);
+            font-weight: 400;
+            transition: color 0.3s, border-color 0.3s;
+            line-height: 1.5;
+            max-width: 90%;
+        }
+
+        .events-section {
+            margin-bottom: 0;
+        }
+        .events-section .flex-row {
+            margin-bottom: var(--spacing-sm);
+        }
+        .events-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: var(--spacing-xs);
+        }
+
+        .flex-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: var(--spacing-sm);
+            align-items: center;
+        }
+        .flex-row .field {
+            flex: 1 1 140px;
+        }
+        .flex-row .field-sm {
+            flex: 0 1 100px;
+        }
+
+        .field-group {
+            margin-bottom: var(--spacing-lg);
+        }
+        .field-group label {
+            display: block;
+            font-weight: 500;
+            font-size: 14px;
+            color: var(--text-primary);
+            margin-bottom: var(--spacing-xs);
+            transition: color 0.3s;
+        }
+        .field-group input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1px solid var(--border-light);
+            border-radius: var(--radius-input);
+            font-size: 15px;
+            font-family: var(--font-body);
+            background: var(--bg-input);
+            color: var(--text-primary);
+            transition: border-color 0.2s, box-shadow 0.2s, background 0.3s, color 0.3s;
+            outline: none;
+        }
+        .field-group input:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 4px rgba(31, 93, 78, 0.12);
+            background: var(--bg-app);
+        }
+
+        .flex-row input,
+        .flex-row select {
+            padding: var(--spacing-sm) 14px;
+            border: 1px solid var(--border-light);
+            border-radius: var(--radius-input);
+            font-size: 14px;
+            font-family: var(--font-body);
+            background: var(--bg-input);
+            color: var(--text-primary);
+            width: 100%;
+            outline: none;
+            transition: border-color 0.2s, box-shadow 0.2s, background 0.3s, color 0.3s;
+        }
+        .flex-row input:focus,
+        .flex-row select:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 4px rgba(31, 93, 78, 0.1);
+            background: var(--bg-app);
+        }
+
+        .btn {
+            padding: var(--spacing-sm) 22px;
+            border: none;
+            border-radius: var(--radius-btn);
+            font-weight: 600;
+            font-family: var(--font-body);
+            font-size: 14px;
+            cursor: pointer;
+            transition: background 0.2s, transform 0.1s, box-shadow 0.2s;
+            white-space: nowrap;
+            background: var(--bg-chip);
+            color: var(--text-primary);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+        }
+        .btn:hover {
+            transform: translateY(-1px);
+        }
+        .btn:active {
+            transform: scale(0.97);
+        }
+        .btn-primary {
+            background: var(--accent);
+            color: #fff;
+            box-shadow: 0 4px 14px rgba(31, 93, 78, 0.3);
+        }
+        .btn-primary:hover {
+            background: var(--accent-hover);
+            box-shadow: 0 6px 18px rgba(31, 93, 78, 0.35);
+        }
+        .btn-success {
+            background: var(--success);
+            color: #fff;
+            box-shadow: 0 4px 14px rgba(31, 93, 78, 0.3);
+        }
+        .btn-success:hover {
+            background: var(--success-hover);
+            box-shadow: 0 6px 18px rgba(31, 93, 78, 0.35);
+        }
+        .btn-danger {
+            background: var(--danger);
+            color: #fff;
+            box-shadow: 0 4px 14px rgba(156, 50, 69, 0.25);
+        }
+        .btn-danger:hover {
+            background: var(--danger-hover);
+        }
+        .btn-outline {
+            background: transparent;
+            border: 1px solid var(--border-light);
+            color: var(--text-primary);
+            box-shadow: none;
+        }
+        .btn-outline:hover {
+            background: var(--bg-section);
+        }
+        .btn-sm {
+            padding: 4px 14px;
+            font-size: 13px;
+        }
+
+        .btn-copy {
+            background: transparent;
+            border: 1px solid var(--border-light);
+            color: var(--text-secondary);
+            padding: 4px 14px;
+            font-size: 13px;
+            font-family: var(--font-body);
+            font-weight: 500;
+            border-radius: var(--radius-btn);
+            cursor: pointer;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            box-shadow: none;
+        }
+        .btn-copy:hover {
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+        .btn-copy.copied {
+            border-color: var(--success);
+            color: var(--success);
+        }
+
+        .section {
+            background: var(--bg-section);
+            border-radius: var(--radius-section);
+            padding: var(--spacing-lg);
+            margin-bottom: var(--spacing-lg);
+            border: 1px solid var(--border-section);
+            transition: background 0.3s, border-color 0.3s;
+        }
+        .section-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-family: var(--font-display);
+            font-weight: 600;
+            font-size: 18px;
+            margin-bottom: var(--spacing-md);
+            color: var(--text-primary);
+            transition: color 0.3s;
+        }
+        .section-header .badge {
+            background: var(--bg-chip);
+            padding: 0 12px;
+            border-radius: 30px;
+            font-size: 12px;
+            font-family: var(--font-mono);
+            font-weight: 600;
+            color: var(--text-secondary);
+            line-height: 24px;
+            transition: background 0.3s, color 0.3s;
+        }
+
+        .chip-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: var(--spacing-sm);
+        }
+        .chip {
+            background: var(--bg-chip);
+            padding: 6px 14px 6px 16px;
+            border-radius: var(--radius-chip);
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+            color: var(--text-primary);
+            transition: background 0.3s, color 0.3s;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+            cursor: default;
+            border: 1px solid var(--border-section);
+        }
+        .chip .chip-name {
+            cursor: text;
+            outline: none;
+            border: none;
+            background: transparent;
+            font: inherit;
+            color: inherit;
+            padding: 0;
+            min-width: 20px;
+            border-bottom: 1px dashed transparent;
+            transition: border-color 0.2s;
+        }
+        .chip .chip-name:focus {
+            border-bottom-color: var(--accent);
+            outline: none;
+        }
+        .chip .remove {
+            cursor: pointer;
+            color: var(--chip-remove);
+            font-weight: 600;
+            font-size: 16px;
+            line-height: 1;
+            transition: color 0.1s;
+            margin-left: 2px;
+        }
+        .chip .remove:hover {
+            color: var(--chip-remove-hover);
+        }
+
+        .event-chip {
+            background: var(--bg-chip);
+            padding: 6px 14px 6px 16px;
+            border-radius: var(--radius-chip);
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+            color: var(--text-primary);
+            cursor: pointer;
+            transition: background 0.2s, color 0.2s, transform 0.1s;
+            border: 1px solid var(--border-section);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+        }
+        .event-chip.active {
+            background: var(--bg-chip-active);
+            color: var(--text-chip-active);
+            border-color: var(--bg-chip-active);
+            box-shadow: 0 4px 14px rgba(31, 93, 78, 0.3);
+        }
+        .event-chip .event-name {
+            cursor: text;
+            outline: none;
+            border: none;
+            background: transparent;
+            font: inherit;
+            color: inherit;
+            padding: 0;
+            min-width: 20px;
+            border-bottom: 1px dashed transparent;
+            transition: border-color 0.2s;
+        }
+        .event-chip .event-name:focus {
+            border-bottom-color: currentColor;
+            outline: none;
+        }
+        .event-chip .remove {
+            cursor: pointer;
+            color: var(--chip-remove);
+            font-weight: 600;
+            font-size: 16px;
+            line-height: 1;
+            transition: color 0.1s;
+        }
+        .event-chip.active .remove {
+            color: rgba(255,255,255,0.7);
+        }
+        .event-chip .remove:hover {
+            color: var(--chip-remove-hover);
+        }
+        .event-chip.active .remove:hover {
+            color: #fff;
+        }
+
+        .expense-item {
+            background: var(--bg-app);
+            border-radius: var(--radius-input);
+            padding: var(--spacing-sm) var(--spacing-md);
+            margin-top: var(--spacing-sm);
+            border: 1px solid var(--border-section);
+            transition: background 0.3s, border-color 0.3s, box-shadow 0.2s;
+            cursor: pointer;
+        }
+        .expense-item:hover {
+            border-color: var(--accent);
+            box-shadow: 0 2px 12px rgba(31, 93, 78, 0.08);
+        }
+        .expense-item.editing {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(31, 93, 78, 0.15);
+            background: var(--bg-section);
+            cursor: default;
+        }
+        .expense-item .display-mode,
+        .expense-item .edit-mode {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: var(--spacing-sm);
+        }
+        .expense-item .display-mode {
+            justify-content: space-between;
+        }
+        .expense-item .display-mode .info {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px 16px;
+            align-items: baseline;
+            flex: 1;
+            pointer-events: none;
+            margin-right: var(--spacing-sm);
+        }
+        .expense-item .display-mode .info .payer {
+            font-weight: 600;
+        }
+        .expense-item .display-mode .info .desc {
+            color: var(--text-secondary);
+            font-size: 14px;
+        }
+        .expense-item .display-mode .info .excluded-info {
+            color: var(--text-muted);
+            font-size: 12px;
+            background: var(--bg-section);
+            padding: 0 8px;
+            border-radius: 12px;
+        }
+        .expense-item .display-mode .info .amount {
+            font-weight: 600;
+            font-family: var(--font-mono);
+        }
+        .expense-item .display-mode .del {
+            color: var(--chip-remove);
+            cursor: pointer;
+            font-size: 16px;
+            line-height: 1;
+            transition: color 0.1s;
+            padding: 0 4px;
+            pointer-events: auto;
+            flex-shrink: 0;
+        }
+        .expense-item .display-mode .del:hover {
+            color: var(--chip-remove-hover);
+        }
+
+        .expense-item .edit-mode {
+            flex-direction: column;
+            align-items: stretch;
+            gap: var(--spacing-sm);
+            width: 100%;
+        }
+        .expense-item .edit-mode .edit-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: var(--spacing-sm);
+            align-items: center;
+        }
+        .expense-item .edit-mode .edit-row .field {
+            flex: 1 1 140px;
+        }
+        .expense-item .edit-mode .edit-row .field-sm {
+            flex: 0 1 100px;
+        }
+        .expense-item .edit-mode .edit-row select,
+        .expense-item .edit-mode .edit-row input {
+            padding: var(--spacing-sm) 12px;
+            border: 1px solid var(--border-light);
+            border-radius: var(--radius-input);
+            font-size: 14px;
+            font-family: var(--font-body);
+            background: var(--bg-input);
+            color: var(--text-primary);
+            width: 100%;
+            outline: none;
+            transition: border-color 0.2s, box-shadow 0.2s, background 0.3s, color 0.3s;
+        }
+        .expense-item .edit-mode .edit-row select:focus,
+        .expense-item .edit-mode .edit-row input:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 4px rgba(31, 93, 78, 0.1);
+            background: var(--bg-app);
+        }
+        .expense-item .edit-mode .exclude-hint {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-top: 2px;
+        }
+        .expense-item .edit-mode .exclude-checkboxes {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            padding: var(--spacing-xs) 0;
+        }
+        .expense-item .edit-mode .exclude-checkboxes label {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 14px;
+            color: var(--text-primary);
+            cursor: pointer;
+        }
+        .expense-item .edit-mode .exclude-checkboxes input[type="checkbox"] {
+            width: 16px;
+            height: 16px;
+            accent-color: var(--checkbox-checked);
+            background: var(--checkbox-bg);
+            border: 1px solid var(--checkbox-border);
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .expense-item .edit-mode .edit-actions {
+            display: flex;
+            gap: var(--spacing-sm);
+            justify-content: flex-end;
+        }
+
+        .result-box {
+            background: var(--bg-result);
+            border-radius: var(--radius-section);
+            padding: var(--spacing-lg);
+            margin-top: var(--spacing-lg);
+            border: 1px dashed var(--border-result);
+            transition: background 0.3s, border-color 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+        .result-box::before {
+            content: "ИТОГ";
+            position: absolute;
+            top: 16px;
+            right: -30px;
+            transform: rotate(24deg);
+            font-family: var(--font-mono);
+            font-weight: 700;
+            font-size: 11px;
+            letter-spacing: 3px;
+            color: var(--gold);
+            border: 2px solid var(--gold);
+            padding: 3px 32px 3px 34px;
+            opacity: 0.55;
+            border-radius: 4px;
+            pointer-events: none;
+        }
+        .result-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: var(--spacing-md);
+            padding-right: 40px;
+        }
+        .result-header h3 {
+            font-family: var(--font-display);
+            font-weight: 600;
+            font-size: 19px;
+            color: var(--text-primary);
+            transition: color 0.3s;
+            margin: 0;
+        }
+        .debt-list {
+            list-style: none;
+            padding: 0;
+        }
+        .debt-list li {
+            padding: 7px 0;
+            border-bottom: 1px dashed var(--border-result);
+            font-size: 15px;
+            color: var(--text-primary);
+            transition: border-color 0.3s, color 0.3s;
+            animation: fadeSlide 0.25s ease;
+        }
+        .debt-list li:last-child {
+            border: none;
+        }
+        .debt-row {
+            display: flex;
+            align-items: baseline;
+            gap: 6px;
+        }
+        .debt-row .names {
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+        .debt-list .from {
+            font-weight: 600;
+            color: var(--debt-from);
+        }
+        .debt-list .to {
+            font-weight: 600;
+            color: var(--debt-to);
+        }
+        .debt-row .arrow {
+            color: var(--text-muted);
+            flex-shrink: 0;
+        }
+        .debt-row .leader {
+            flex: 1;
+            border-bottom: 1px dotted var(--border-result);
+            margin-bottom: 5px;
+            min-width: 12px;
+        }
+        .debt-row .sum {
+            font-family: var(--font-mono);
+            font-weight: 700;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+
+        @keyframes fadeSlide {
+            0% { opacity: 0; transform: translateY(-4px); }
+            100% { opacity: 1; transform: translateY(0); }
+        }
+
+        .empty-msg {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 6px 0;
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%) scale(0.9);
+            background: var(--toast-bg);
+            color: var(--toast-text);
+            padding: 10px 26px;
+            border-radius: var(--radius-btn);
+            font-weight: 500;
+            font-family: var(--font-body);
+            font-size: 15px;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.25);
+            opacity: 0;
+            transition: opacity 0.3s, transform 0.3s;
+            pointer-events: none;
+            z-index: 999;
+        }
+        .toast.show {
+            opacity: 1;
+            transform: translateX(-50%) scale(1);
+        }
+
+        @media (max-width: 500px) {
+            .app { padding: var(--spacing-md); }
+            .tear-edge { margin: var(--spacing-md) calc(-1 * var(--spacing-md)) var(--spacing-lg); }
+            .flex-row .field { flex: 1 1 100%; }
+            .flex-row .field-sm { flex: 1 1 80px; }
+            .expense-item .display-mode .info { flex-wrap: wrap; gap: 2px 10px; }
+            .result-header { flex-wrap: wrap; gap: 8px; }
+            .subhead { max-width: 100%; }
+            .app-top { padding-bottom: var(--spacing-sm); }
+            .section { padding: var(--spacing-md); }
+            .result-box { padding: var(--spacing-md); }
+            .expense-item .edit-mode .edit-row .field { flex: 1 1 100%; }
+            .expense-item .edit-mode .edit-row .field-sm { flex: 1 1 80px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="app" id="app">
+        <div class="app-top">
+            <div class="app-header">
+                <div>
+                    <h1>Складчина</h1>
+                </div>
+                <div class="theme-toggle" id="themeToggle" role="button" tabindex="0" aria-label="Переключить тему">
+                    <span class="toggle-label" id="themeLabel">Светлая</span>
+                    <div class="toggle-track">
+                        <div class="toggle-dot"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="events-section">
+                <div class="flex-row">
+                    <div class="field">
+                        <input type="text" id="eventNameInput" placeholder="Название события" />
+                    </div>
+                    <button class="btn btn-primary" id="addEventBtn">Создать</button>
+                </div>
+                <div class="events-list" id="eventsList"></div>
+            </div>
+
+            <div class="tear-edge" aria-hidden="true"></div>
+        </div>
+
+        <div id="activeEventContent">
+            <div class="section">
+                <div class="section-header">
+                    <span>👥 Участники</span>
+                    <span class="badge" id="memberCount">0</span>
+                </div>
+                <div class="flex-row">
+                    <div class="field">
+                        <input type="text" id="memberInput" placeholder="Имя участника" />
+                    </div>
+                    <button class="btn btn-primary" id="addMemberBtn">Добавить</button>
+                </div>
+                <div class="chip-list" id="memberList"></div>
+            </div>
+
+            <div class="section">
+                <div class="section-header">
+                    <span>💸 Расходы</span>
+                    <span class="badge" id="expenseCount">0</span>
+                </div>
+                <div class="flex-row" style="margin-bottom:6px;">
+                    <div class="field">
+                        <select id="payerSelect">
+                            <option value="">— плательщик —</option>
+                        </select>
+                    </div>
+                    <div class="field">
+                        <input type="text" id="expenseDesc" placeholder="За что (еда, такси…)" />
+                    </div>
+                    <div class="field-sm">
+                        <input type="number" id="expenseAmount" placeholder="Сумма" min="0" step="any" />
+                    </div>
+                    <button class="btn btn-success" id="addExpenseBtn">➕</button>
+                </div>
+                <div id="expenseList"></div>
+            </div>
+
+            <div id="resultContainer">
+                <div class="result-box" id="resultBox" style="display:none;">
+                    <div class="result-header">
+                        <h3>⚖️ Кто кому должен</h3>
+                        <button class="btn-copy" id="copyResultBtn">📋 Копировать</button>
+                    </div>
+                    <ul class="debt-list" id="debtList"></ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast" id="toast">Скопировано!</div>
+
+    <script>
+        (function() {
+            const themeToggle = document.getElementById('themeToggle');
+            const themeLabel = document.getElementById('themeLabel');
+            const body = document.body;
+
+            function setTheme(theme) {
+                if (theme === 'dark') {
+                    body.classList.add('dark-theme');
+                    themeLabel.textContent = 'Тёмная';
+                } else {
+                    body.classList.remove('dark-theme');
+                    themeLabel.textContent = 'Светлая';
+                }
+                localStorage.setItem('theme', theme);
+            }
+
+            function toggleTheme() {
+                const isDark = body.classList.contains('dark-theme');
+                setTheme(isDark ? 'light' : 'dark');
+            }
+
+            function loadTheme() {
+                const saved = localStorage.getItem('theme');
+                if (saved) { setTheme(saved); return; }
+                const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+                setTheme(prefersDark ? 'dark' : 'light');
+            }
+
+            themeToggle.addEventListener('click', toggleTheme);
+            themeToggle.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleTheme(); }
+            });
+
+            let events = [];
+            let activeEventId = null;
+            let idCounter = 0;
+            let editingExpenseId = null;
+
+            const eventNameInput = document.getElementById('eventNameInput');
+            const addEventBtn = document.getElementById('addEventBtn');
+            const eventsList = document.getElementById('eventsList');
+
+            const memberInput = document.getElementById('memberInput');
+            const addMemberBtn = document.getElementById('addMemberBtn');
+            const memberList = document.getElementById('memberList');
+            const memberCount = document.getElementById('memberCount');
+
+            const payerSelect = document.getElementById('payerSelect');
+            const expenseDesc = document.getElementById('expenseDesc');
+            const expenseAmount = document.getElementById('expenseAmount');
+            const addExpenseBtn = document.getElementById('addExpenseBtn');
+            const expenseList = document.getElementById('expenseList');
+            const expenseCount = document.getElementById('expenseCount');
+
+            const resultBox = document.getElementById('resultBox');
+            const debtList = document.getElementById('debtList');
+            const copyResultBtn = document.getElementById('copyResultBtn');
+            const toast = document.getElementById('toast');
+
+            function generateId() { return ++idCounter; }
+
+            function getActiveEvent() {
+                return events.find(e => e.id === activeEventId) || null;
+            }
+
+            function getExpense(id) {
+                const ev = getActiveEvent();
+                if (!ev) return null;
+                return ev.expenses.find(e => e.id === id) || null;
+            }
+
+            function saveState() {
+                localStorage.setItem('expenseAppData', JSON.stringify({
+                    events, activeEventId, idCounter
+                }));
+            }
+
+            function loadState() {
+                const raw = localStorage.getItem('expenseAppData');
+                if (raw) {
+                    try {
+                        const data = JSON.parse(raw);
+                        events = data.events || [];
+                        activeEventId = data.activeEventId || null;
+                        idCounter = data.idCounter || 0;
+                        if (activeEventId && !events.some(e => e.id === activeEventId)) {
+                            activeEventId = events.length > 0 ? events[0].id : null;
+                        }
+                        return true;
+                    } catch (e) { return false; }
+                }
+                return false;
+            }
+
+            function renderEvents() {
+                eventsList.innerHTML = '';
+                if (events.length === 0) {
+                    const placeholder = document.createElement('span');
+                    placeholder.className = 'empty-msg';
+                    placeholder.textContent = 'Нет событий. Создайте первое!';
+                    eventsList.appendChild(placeholder);
+                    return;
+                }
+                events.forEach(ev => {
+                    const chip = document.createElement('span');
+                    chip.className = 'event-chip' + (ev.id === activeEventId ? ' active' : '');
+                    const nameSpan = document.createElement('span');
+                    nameSpan.className = 'event-name';
+                    nameSpan.textContent = ev.name;
+                    nameSpan.contentEditable = true;
+                    nameSpan.spellcheck = false;
+                    nameSpan.addEventListener('dblclick', (e) => {
+                        e.stopPropagation();
+                        nameSpan.focus();
+                        document.execCommand('selectAll', false, null);
+                    });
+                    nameSpan.addEventListener('blur', () => {
+                        const newName = nameSpan.textContent.trim() || 'Без названия';
+                        if (newName !== ev.name) {
+                            if (events.some(e => e.id !== ev.id && e.name.toLowerCase() === newName.toLowerCase())) {
+                                alert('Событие с таким названием уже существует');
+                                nameSpan.textContent = ev.name;
+                                return;
+                            }
+                            ev.name = newName;
+                            saveState();
+                            renderAll();
+                        }
+                    });
+                    nameSpan.addEventListener('keydown', (e) => {
+                        if (e.key === 'Enter') {
+                            e.preventDefault();
+                            nameSpan.blur();
+                        }
+                        if (e.key === 'Escape') {
+                            nameSpan.textContent = ev.name;
+                            nameSpan.blur();
+                        }
+                    });
+                    chip.appendChild(nameSpan);
+                    const removeSpan = document.createElement('span');
+                    removeSpan.className = 'remove';
+                    removeSpan.textContent = '×';
+                    removeSpan.dataset.id = ev.id;
+                    removeSpan.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        deleteEvent(ev.id);
+                    });
+                    chip.appendChild(removeSpan);
+                    chip.addEventListener('click', (e) => {
+                        if (e.target.classList.contains('event-name') || e.target.classList.contains('remove')) return;
+                        setActiveEvent(ev.id);
+                    });
+                    eventsList.appendChild(chip);
+                });
+            }
+
+            function setActiveEvent(id) {
+                if (activeEventId === id) return;
+                const ev = events.find(e => e.id === id);
+                if (!ev) return;
+                activeEventId = id;
+                cancelEditing();
+                saveState();
+                renderAll();
+            }
+
+            function createEvent() {
+                const name = eventNameInput.value.trim();
+                if (!name) { alert('Введите название события'); return; }
+                if (events.some(e => e.name.toLowerCase() === name.toLowerCase())) {
+                    alert('Событие с таким названием уже существует');
+                    return;
+                }
+                const newEvent = {
+                    id: generateId(),
+                    name: name,
+                    members: [],
+                    expenses: []
+                };
+                events.push(newEvent);
+                activeEventId = newEvent.id;
+                eventNameInput.value = '';
+                cancelEditing();
+                saveState();
+                renderAll();
+            }
+
+            function deleteEvent(id) {
+                if (!confirm('Удалить событие и все его данные?')) return;
+                events = events.filter(e => e.id !== id);
+                if (activeEventId === id) {
+                    activeEventId = events.length > 0 ? events[0].id : null;
+                }
+                cancelEditing();
+                saveState();
+                renderAll();
+            }
+
+            function renderMembers() {
+                const ev = getActiveEvent();
+                memberList.innerHTML = '';
+                if (ev) {
+                    ev.members.forEach(m => {
+                        const chip = document.createElement('span');
+                        chip.className = 'chip';
+                        const nameSpan = document.createElement('span');
+                        nameSpan.className = 'chip-name';
+                        nameSpan.textContent = m.name;
+                        nameSpan.contentEditable = true;
+                        nameSpan.spellcheck = false;
+                        nameSpan.addEventListener('dblclick', (e) => {
+                            e.stopPropagation();
+                            nameSpan.focus();
+                            document.execCommand('selectAll', false, null);
+                        });
+                        nameSpan.addEventListener('blur', () => {
+                            const newName = nameSpan.textContent.trim() || 'Без имени';
+                            if (newName !== m.name) {
+                                if (ev.members.some(mm => mm.id !== m.id && mm.name.toLowerCase() === newName.toLowerCase())) {
+                                    alert('Участник с таким именем уже существует');
+                                    nameSpan.textContent = m.name;
+                                    return;
+                                }
+                                m.name = newName;
+                                saveState();
+                                renderAll();
+                            }
+                        });
+                        nameSpan.addEventListener('keydown', (e) => {
+                            if (e.key === 'Enter') {
+                                e.preventDefault();
+                                nameSpan.blur();
+                            }
+                            if (e.key === 'Escape') {
+                                nameSpan.textContent = m.name;
+                                nameSpan.blur();
+                            }
+                        });
+                        chip.appendChild(nameSpan);
+                        const removeSpan = document.createElement('span');
+                        removeSpan.className = 'remove';
+                        removeSpan.textContent = '×';
+                        removeSpan.addEventListener('click', (e) => {
+                            e.stopPropagation();
+                            removeMember(m.id);
+                        });
+                        chip.appendChild(removeSpan);
+                        memberList.appendChild(chip);
+                    });
+                    memberCount.textContent = ev.members.length;
+                } else {
+                    memberCount.textContent = '0';
+                }
+                updatePayerSelect();
+            }
+
+            function renderExpenses() {
+                const ev = getActiveEvent();
+                expenseList.innerHTML = '';
+                if (!ev) {
+                    expenseCount.textContent = '0';
+                    expenseList.innerHTML = '<div class="empty-msg">Выберите событие</div>';
+                    return;
+                }
+                if (ev.expenses.length === 0) {
+                    expenseList.innerHTML = '<div class="empty-msg">Пока нет расходов</div>';
+                } else {
+                    ev.expenses.forEach(e => {
+                        const div = document.createElement('div');
+                        div.className = 'expense-item' + (e.id === editingExpenseId ? ' editing' : '');
+                        div.dataset.id = e.id;
+
+                        // Display mode
+                        const displayMode = document.createElement('div');
+                        displayMode.className = 'display-mode';
+                        const payerName = ev.members.find(m => m.id === e.payer)?.name || '❓';
+                        let excludedNames = [];
+                        if (e.excluded && e.excluded.length > 0) {
+                            excludedNames = e.excluded.map(id => {
+                                const m = ev.members.find(mm => mm.id === id);
+                                return m ? m.name : '?';
+                            }).filter(Boolean);
+                        }
+                        const exclText = excludedNames.length ? ` (без: ${excludedNames.join(', ')})` : '';
+                        displayMode.innerHTML = `
+                            <div class="info">
+                                <span class="payer">${payerName}</span>
+                                <span class="desc">${e.description || '—'}</span>
+                                <span class="excluded-info">${exclText}</span>
+                                <span class="amount">${Number(e.amount).toLocaleString()} ₽</span>
+                            </div>
+                            <span class="del" data-id="${e.id}">✕</span>
+                        `;
+                        displayMode.querySelector('.del').addEventListener('click', (evt) => {
+                            evt.stopPropagation();
+                            removeExpense(e.id);
+                        });
+                        div.appendChild(displayMode);
+
+                        // Edit mode (hidden by default)
+                        const editMode = document.createElement('div');
+                        editMode.className = 'edit-mode';
+                        editMode.style.display = 'none';
+
+                        // Payer, description, amount row
+                        const editRow = document.createElement('div');
+                        editRow.className = 'edit-row';
+
+                        const payerField = document.createElement('div');
+                        payerField.className = 'field';
+                        const payerSelectEdit = document.createElement('select');
+                        payerSelectEdit.id = 'edit-payer-' + e.id;
+                        ev.members.forEach(m => {
+                            const opt = document.createElement('option');
+                            opt.value = m.id;
+                            opt.textContent = m.name;
+                            if (m.id === e.payer) opt.selected = true;
+                            payerSelectEdit.appendChild(opt);
+                        });
+                        payerField.appendChild(payerSelectEdit);
+                        editRow.appendChild(payerField);
+
+                        const descField = document.createElement('div');
+                        descField.className = 'field';
+                        const descInput = document.createElement('input');
+                        descInput.type = 'text';
+                        descInput.value = e.description || '';
+                        descInput.placeholder = 'Описание';
+                        descField.appendChild(descInput);
+                        editRow.appendChild(descField);
+
+                        const amountField = document.createElement('div');
+                        amountField.className = 'field-sm';
+                        const amountInput = document.createElement('input');
+                        amountInput.type = 'number';
+                        amountInput.value = e.amount || '';
+                        amountInput.placeholder = 'Сумма';
+                        amountInput.min = '0';
+                        amountInput.step = 'any';
+                        amountField.appendChild(amountInput);
+                        editRow.appendChild(amountField);
+
+                        editMode.appendChild(editRow);
+
+                        // Exclude checkboxes
+                        const exclHint = document.createElement('div');
+                        exclHint.className = 'exclude-hint';
+                        exclHint.textContent = 'Отметьте, кого исключить из этого расхода:';
+                        editMode.appendChild(exclHint);
+
+                        const exclContainer = document.createElement('div');
+                        exclContainer.className = 'exclude-checkboxes';
+                        ev.members.forEach(m => {
+                            const label = document.createElement('label');
+                            const cb = document.createElement('input');
+                            cb.type = 'checkbox';
+                            cb.value = m.id;
+                            if (e.excluded && e.excluded.includes(m.id)) cb.checked = true;
+                            label.appendChild(cb);
+                            label.appendChild(document.createTextNode(' ' + m.name));
+                            exclContainer.appendChild(label);
+                        });
+                        editMode.appendChild(exclContainer);
+
+                        // Actions
+                        const actions = document.createElement('div');
+                        actions.className = 'edit-actions';
+                        const saveBtn = document.createElement('button');
+                        saveBtn.className = 'btn btn-primary btn-sm';
+                        saveBtn.textContent = 'Сохранить';
+                        saveBtn.addEventListener('click', (evt) => {
+                            evt.stopPropagation();
+                            saveExpenseInline(e.id);
+                        });
+                        const cancelBtn = document.createElement('button');
+                        cancelBtn.className = 'btn btn-danger btn-sm';
+                        cancelBtn.textContent = 'Отмена';
+                        cancelBtn.addEventListener('click', (evt) => {
+                            evt.stopPropagation();
+                            cancelEditing();
+                        });
+                        actions.appendChild(saveBtn);
+                        actions.appendChild(cancelBtn);
+                        editMode.appendChild(actions);
+
+                        div.appendChild(editMode);
+
+                        // Click on display mode to enter edit
+                        displayMode.addEventListener('click', (evt) => {
+                            if (evt.target.classList.contains('del')) return;
+                            startEditing(e.id);
+                        });
+
+                        expenseList.appendChild(div);
+                    });
+                }
+                expenseCount.textContent = ev.expenses.length;
+            }
+
+            function updatePayerSelect() {
+                const ev = getActiveEvent();
+                const current = payerSelect.value;
+                payerSelect.innerHTML = '<option value="">— плательщик —</option>';
+                if (ev) {
+                    ev.members.forEach(m => {
+                        const opt = document.createElement('option');
+                        opt.value = m.id;
+                        opt.textContent = m.name;
+                        payerSelect.appendChild(opt);
+                    });
+                    if (current && ev.members.some(m => m.id == current)) {
+                        payerSelect.value = current;
+                    }
+                }
+            }
+
+            function startEditing(expenseId) {
+                if (editingExpenseId === expenseId) {
+                    cancelEditing();
+                    return;
+                }
+                if (editingExpenseId) {
+                    cancelEditing();
+                }
+                editingExpenseId = expenseId;
+                renderAll();
+                // после рендера показываем edit-mode и скрываем display-mode для этого расхода
+                const items = document.querySelectorAll('.expense-item');
+                items.forEach(item => {
+                    const id = parseInt(item.dataset.id);
+                    if (id === expenseId) {
+                        const display = item.querySelector('.display-mode');
+                        const edit = item.querySelector('.edit-mode');
+                        if (display) display.style.display = 'none';
+                        if (edit) edit.style.display = 'flex';
+                    }
+                });
+            }
+
+            function cancelEditing() {
+                editingExpenseId = null;
+                renderAll();
+            }
+
+            function saveExpenseInline(id) {
+                const ev = getActiveEvent();
+                if (!ev) return;
+                const exp = getExpense(id);
+                if (!exp) return;
+
+                const item = document.querySelector(`.expense-item[data-id="${id}"]`);
+                if (!item) return;
+
+                const payerSelect = item.querySelector('#edit-payer-' + id);
+                const descInput = item.querySelector('.edit-mode input[type="text"]');
+                const amountInput = item.querySelector('.edit-mode input[type="number"]');
+                const checkboxes = item.querySelectorAll('.edit-mode .exclude-checkboxes input[type="checkbox"]');
+
+                const payerId = parseInt(payerSelect.value);
+                if (!payerId) { alert('Выберите плательщика'); return; }
+                const desc = descInput.value.trim() || 'Без описания';
+                const amount = parseFloat(amountInput.value);
+                if (isNaN(amount) || amount <= 0) { alert('Введите сумму'); return; }
+
+                const excluded = [];
+                checkboxes.forEach(cb => {
+                    if (cb.checked) excluded.push(parseInt(cb.value));
+                });
+
+                exp.payer = payerId;
+                exp.description = desc;
+                exp.amount = amount;
+                exp.excluded = excluded;
+
+                editingExpenseId = null;
+                saveState();
+                renderAll();
+            }
+
+            function addMember() {
+                const ev = getActiveEvent();
+                if (!ev) { alert('Сначала создайте событие'); return; }
+                const name = memberInput.value.trim();
+                if (!name) { alert('Введите имя'); return; }
+                if (ev.members.some(m => m.name.toLowerCase() === name.toLowerCase())) {
+                    alert('Такой участник уже есть в этом событии');
+                    return;
+                }
+                ev.members.push({ id: generateId(), name });
+                memberInput.value = '';
+                saveState();
+                renderAll();
+            }
+
+            function removeMember(id) {
+                const ev = getActiveEvent();
+                if (!ev) return;
+                if (!confirm('Удалить участника и все его расходы?')) return;
+                ev.members = ev.members.filter(m => m.id !== id);
+                ev.expenses = ev.expenses.filter(e => e.payer !== id);
+                ev.expenses.forEach(e => {
+                    if (e.excluded) e.excluded = e.excluded.filter(x => x !== id);
+                });
+                if (editingExpenseId) {
+                    const exp = getExpense(editingExpenseId);
+                    if (!exp) cancelEditing();
+                }
+                saveState();
+                renderAll();
+            }
+
+            function addExpense() {
+                const ev = getActiveEvent();
+                if (!ev) { alert('Сначала создайте событие'); return; }
+                if (editingExpenseId) {
+                    // если в режиме редактирования, сохраняем
+                    saveExpenseInline(editingExpenseId);
+                    return;
+                }
+                if (ev.members.length === 0) { alert('Добавьте хотя бы одного участника'); return; }
+                const payerId = parseInt(payerSelect.value);
+                if (!payerId) { alert('Выберите плательщика'); return; }
+                const desc = expenseDesc.value.trim() || 'Без описания';
+                const amount = parseFloat(expenseAmount.value);
+                if (isNaN(amount) || amount <= 0) { alert('Введите сумму'); return; }
+
+                const excluded = [];
+                // при добавлении нового расхода исключений нет, так как мы убрали общую панель
+                // можно оставить пустой массив
+
+                ev.expenses.push({
+                    id: generateId(),
+                    payer: payerId,
+                    description: desc,
+                    amount: amount,
+                    excluded: excluded
+                });
+                expenseDesc.value = '';
+                expenseAmount.value = '';
+                saveState();
+                renderAll();
+            }
+
+            function removeExpense(id) {
+                const ev = getActiveEvent();
+                if (!ev) return;
+                ev.expenses = ev.expenses.filter(e => e.id !== id);
+                if (editingExpenseId === id) cancelEditing();
+                saveState();
+                renderAll();
+            }
+
+            function getTransactions() {
+                const ev = getActiveEvent();
+                if (!ev) return null;
+                const members = ev.members;
+                const expenses = ev.expenses;
+                if (members.length < 2) return null;
+                if (expenses.length === 0) return null;
+
+                const paid = {};
+                const owed = {};
+                members.forEach(m => { paid[m.id] = 0; owed[m.id] = 0; });
+
+                expenses.forEach(exp => {
+                    const payer = exp.payer;
+                    const amount = exp.amount;
+                    const excluded = exp.excluded || [];
+                    const participants = members.filter(m => !excluded.includes(m.id));
+                    if (participants.length === 0) return;
+                    const perPerson = amount / participants.length;
+                    paid[payer] = (paid[payer] || 0) + amount;
+                    participants.forEach(m => {
+                        owed[m.id] = (owed[m.id] || 0) + perPerson;
+                    });
+                });
+
+                const balance = {};
+                members.forEach(m => { balance[m.id] = (paid[m.id] || 0) - (owed[m.id] || 0); });
+
+                const creditors = members.filter(m => balance[m.id] > 0.001).map(m => ({ ...m, amount: balance[m.id] }));
+                const debtors = members.filter(m => balance[m.id] < -0.001).map(m => ({ ...m, amount: -balance[m.id] }));
+
+                creditors.sort((a, b) => b.amount - a.amount);
+                debtors.sort((a, b) => b.amount - a.amount);
+
+                const transactions = [];
+                let i = 0, j = 0;
+                while (i < debtors.length && j < creditors.length) {
+                    const debtor = debtors[i];
+                    const creditor = creditors[j];
+                    const minAmt = Math.min(debtor.amount, creditor.amount);
+                    if (minAmt > 0.001) {
+                        transactions.push({ from: debtor.name, to: creditor.name, amount: minAmt });
+                    }
+                    debtor.amount -= minAmt;
+                    creditor.amount -= minAmt;
+                    if (debtor.amount < 0.001) i++;
+                    if (creditor.amount < 0.001) j++;
+                }
+                return transactions;
+            }
+
+            function updateResult() {
+                const transactions = getTransactions();
+                if (!transactions) {
+                    resultBox.style.display = 'none';
+                    return;
+                }
+                resultBox.style.display = 'block';
+                debtList.innerHTML = '';
+                if (transactions.length === 0) {
+                    debtList.innerHTML = '<li class="empty-msg">Все уже расплатились поровну 👍</li>';
+                } else {
+                    transactions.forEach(t => {
+                        const li = document.createElement('li');
+                        li.innerHTML = `
+                            <span class="debt-row">
+                                <span class="names"><span class="from">${t.from}</span> <span class="arrow">→</span> <span class="to">${t.to}</span></span>
+                                <span class="leader"></span>
+                                <span class="sum">${t.amount.toLocaleString()} ₽</span>
+                            </span>
+                        `;
+                        debtList.appendChild(li);
+                    });
+                }
+            }
+
+            function copyResult() {
+                const ev = getActiveEvent();
+                if (!ev) return;
+                const transactions = getTransactions();
+                if (!transactions || transactions.length === 0) {
+                    showToast('Нет долгов для копирования');
+                    return;
+                }
+
+                let text = `Событие: ${ev.name || 'Без названия'}\n`;
+                text += `Кто кому должен:\n`;
+                transactions.forEach(t => {
+                    text += `- ${t.from} должен ${t.to} — ${t.amount.toLocaleString()} ₽\n`;
+                });
+
+                navigator.clipboard.writeText(text).then(() => {
+                    showToast('Скопировано!');
+                    copyResultBtn.classList.add('copied');
+                    setTimeout(() => copyResultBtn.classList.remove('copied'), 2000);
+                }).catch(() => {
+                    const textarea = document.createElement('textarea');
+                    textarea.value = text;
+                    document.body.appendChild(textarea);
+                    textarea.select();
+                    document.execCommand('copy');
+                    document.body.removeChild(textarea);
+                    showToast('Скопировано!');
+                    copyResultBtn.classList.add('copied');
+                    setTimeout(() => copyResultBtn.classList.remove('copied'), 2000);
+                });
+            }
+
+            let toastTimeout;
+
+            function showToast(msg) {
+                toast.textContent = msg;
+                toast.classList.add('show');
+                clearTimeout(toastTimeout);
+                toastTimeout = setTimeout(() => {
+                    toast.classList.remove('show');
+                }, 2000);
+            }
+
+            function renderAll() {
+                renderEvents();
+                renderMembers();
+                renderExpenses();
+                updateResult();
+                // если есть редактируемый расход, показываем его edit-mode
+                if (editingExpenseId) {
+                    const items = document.querySelectorAll('.expense-item');
+                    items.forEach(item => {
+                        const id = parseInt(item.dataset.id);
+                        if (id === editingExpenseId) {
+                            const display = item.querySelector('.display-mode');
+                            const edit = item.querySelector('.edit-mode');
+                            if (display) display.style.display = 'none';
+                            if (edit) edit.style.display = 'flex';
+                        }
+                    });
+                }
+            }
+
+            function init() {
+                loadTheme();
+                const loaded = loadState();
+                if (!loaded || events.length === 0) {
+                    events = [];
+                    activeEventId = null;
+                    saveState();
+                }
+                renderAll();
+
+                addEventBtn.addEventListener('click', createEvent);
+                eventNameInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') createEvent(); });
+
+                addMemberBtn.addEventListener('click', addMember);
+                memberInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') addMember(); });
+
+                addExpenseBtn.addEventListener('click', addExpense);
+                expenseDesc.addEventListener('keydown', (e) => { if (e.key === 'Enter') addExpense(); });
+                expenseAmount.addEventListener('keydown', (e) => { if (e.key === 'Enter') addExpense(); });
+
+                copyResultBtn.addEventListener('click', copyResult);
+            }
+
+            init();
+        })();
+    </script>
+</body>
+</html>
