@@ -1017,13 +1017,15 @@
                     localStorage.removeItem('activeEventId');
                 }
 
+                // Локальную копию сохраняем ВСЕГДА — это подстраховка на случай,
+                // если облако недоступно (нет сети, не настроены правила доступа и т.п.)
+                localStorage.setItem('expenseAppData', JSON.stringify({ events, idCounter }));
+
                 if (FIREBASE_ENABLED && db) {
                     db.doc('sharedData/main').set({ events, idCounter }).catch(err => {
                         console.error('Firebase save error:', err);
-                        showToast('Не удалось сохранить в облако');
+                        showToast('Облако: ошибка сохранения (' + (err.code || err.message) + ')');
                     });
-                } else {
-                    localStorage.setItem('expenseAppData', JSON.stringify({ events, idCounter }));
                 }
             }
 
@@ -1032,24 +1034,33 @@
                 activeEventId = saved ? parseInt(saved) : null;
             }
 
+            function loadLocalBackup() {
+                const raw = localStorage.getItem('expenseAppData');
+                let data = { events: [], idCounter: 0 };
+                if (raw) {
+                    try { data = JSON.parse(raw); } catch (e) { /* оставляем пустые данные */ }
+                }
+                return data;
+            }
+
             function startSync() {
                 loadLocalActiveEvent();
 
                 if (FIREBASE_ENABLED && db) {
                     db.doc('sharedData/main').onSnapshot(
-                        docSnap => applyRemoteData(docSnap.exists ? docSnap.data() : { events: [], idCounter: 0 }),
+                        docSnap => {
+                            applyRemoteData(docSnap.exists ? docSnap.data() : { events: [], idCounter: 0 });
+                        },
                         err => {
                             console.error('Firebase sync error:', err);
-                            showToast('Нет связи с облаком');
+                            showToast('Нет связи с облаком (' + (err.code || err.message) + ') — показаны локальные данные');
+                            // Если облако недоступно, показываем то, что сохранено локально в этом браузере,
+                            // а не пустой экран
+                            applyRemoteData(loadLocalBackup());
                         }
                     );
                 } else {
-                    const raw = localStorage.getItem('expenseAppData');
-                    let data = { events: [], idCounter: 0 };
-                    if (raw) {
-                        try { data = JSON.parse(raw); } catch (e) { /* оставляем пустые данные */ }
-                    }
-                    applyRemoteData(data);
+                    applyRemoteData(loadLocalBackup());
                     showToast('Работает локально — настрой Firebase для общего доступа');
                 }
             }
