@@ -813,7 +813,99 @@
             transform: translateX(-50%) scale(1);
         }
 
+        .summary-row {
+            display: flex;
+            gap: var(--spacing-md);
+            margin-bottom: var(--spacing-lg);
+        }
+        .stat-card {
+            flex: 1;
+            background: var(--bg-section);
+            border: 1px solid var(--border-section);
+            border-radius: var(--radius-section);
+            padding: var(--spacing-md) var(--spacing-lg);
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            transition: background 0.3s, border-color 0.3s;
+        }
+        .stat-card.stat-mine {
+            background: var(--bg-result);
+            border: 1px dashed var(--border-result);
+        }
+        .stat-label {
+            font-family: var(--font-mono);
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: var(--text-secondary);
+            transition: color 0.3s;
+        }
+        .stat-value {
+            font-family: var(--font-display);
+            font-size: 26px;
+            font-weight: 600;
+            color: var(--text-primary);
+            transition: color 0.3s;
+        }
+        .stat-mine-top {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+        }
+        .stat-select {
+            font-family: var(--font-body);
+            font-size: 12px;
+            font-weight: 500;
+            color: var(--text-secondary);
+            background: var(--bg-app);
+            border: 1px solid var(--border-light);
+            border-radius: var(--radius-btn);
+            padding: 3px 10px;
+            cursor: pointer;
+            outline: none;
+            transition: border-color 0.2s, color 0.2s;
+            max-width: 45%;
+        }
+        .stat-select:focus {
+            border-color: var(--accent);
+        }
+
+        .group-bar {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            margin-bottom: var(--spacing-md);
+            padding: 10px 14px;
+            background: var(--bg-section);
+            border: 1px solid var(--border-section);
+            border-radius: var(--radius-input);
+            transition: background 0.3s, border-color 0.3s;
+        }
+        .group-info {
+            font-size: 13px;
+            color: var(--text-secondary);
+            font-family: var(--font-mono);
+            transition: color 0.3s;
+        }
+        .group-info span {
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+        .group-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
         @media (max-width: 500px) {
+            .summary-row { flex-direction: column; gap: var(--spacing-sm); }
+            .stat-value { font-size: 22px; }
+        }
             .app { padding: var(--spacing-md); }
             .tear-edge { margin: var(--spacing-md) calc(-1 * var(--spacing-md)) var(--spacing-lg); }
             .flex-row .field { flex: 1 1 100%; }
@@ -846,6 +938,15 @@
                 </div>
             </div>
 
+            <div class="group-bar" id="groupBar">
+                <span class="group-info">👥 Группа: <span id="groupIdLabel"></span></span>
+                <div class="group-actions">
+                    <button class="btn btn-outline btn-sm" id="inviteBtn" type="button">🔗 Пригласить</button>
+                    <button class="btn btn-outline btn-sm" id="joinGroupBtn" type="button">🔑 Другая группа</button>
+                    <button class="btn btn-outline btn-sm" id="newGroupBtn" type="button">🆕 Новая группа</button>
+                </div>
+            </div>
+
             <div class="events-section">
                 <div class="flex-row">
                     <div class="field">
@@ -860,6 +961,22 @@
         </div>
 
         <div id="activeEventContent">
+            <div class="summary-row" id="summaryRow">
+                <div class="stat-card">
+                    <span class="stat-label">Общие расходы</span>
+                    <span class="stat-value" id="totalExpensesValue">0 ₽</span>
+                </div>
+                <div class="stat-card stat-mine">
+                    <div class="stat-mine-top">
+                        <span class="stat-label">Мои расходы</span>
+                        <select class="stat-select" id="currentMemberSelect">
+                            <option value="">Кто я?</option>
+                        </select>
+                    </div>
+                    <span class="stat-value" id="myExpensesValue">0 ₽</span>
+                </div>
+            </div>
+
             <div class="section">
                 <div class="section-header">
                     <span>👥 Участники</span>
@@ -962,6 +1079,104 @@
                 db = firebase.firestore();
             }
 
+            // ====== ГРУППЫ (изоляция данных) ======
+            // У каждой компании друзей — своя ссылка вида ...?g=КОД.
+            // Люди с разными ссылками не видят данные друг друга.
+            function sanitizeGroupId(raw) {
+                if (!raw) return null;
+                const cleaned = raw.toString().trim().toLowerCase().replace(/[^a-z0-9\-]/g, '');
+                return cleaned ? cleaned.slice(0, 40) : null;
+            }
+
+            function generateGroupId() {
+                return Math.random().toString(36).slice(2, 8) + Math.random().toString(36).slice(2, 6);
+            }
+
+            function resolveGroupId() {
+                const params = new URLSearchParams(window.location.search);
+                const fromUrl = sanitizeGroupId(params.get('g'));
+                if (fromUrl) {
+                    localStorage.setItem('myGroupId', fromUrl);
+                    return fromUrl;
+                }
+                const saved = sanitizeGroupId(localStorage.getItem('myGroupId'));
+                if (saved) {
+                    const url = new URL(window.location.href);
+                    url.searchParams.set('g', saved);
+                    window.history.replaceState({}, '', url);
+                    return saved;
+                }
+                // Самый первый запуск на этом устройстве — используем старое общее
+                // хранилище, чтобы не потерять данные, с которыми уже работали
+                const legacy = 'main';
+                localStorage.setItem('myGroupId', legacy);
+                const url = new URL(window.location.href);
+                url.searchParams.set('g', legacy);
+                window.history.replaceState({}, '', url);
+                return legacy;
+            }
+
+            const groupId = resolveGroupId();
+            const groupDocPath = 'sharedData/' + groupId;
+
+            function localDataKey() { return 'expenseAppData_' + groupId; }
+            function localActiveEventKey() { return 'activeEventId_' + groupId; }
+
+            // Разово переносим старые данные (сохранённые до появления групп) в группу "main"
+            function migrateLegacyLocalStorage() {
+                if (groupId !== 'main') return;
+                if (localStorage.getItem(localDataKey()) === null && localStorage.getItem('expenseAppData') !== null) {
+                    localStorage.setItem(localDataKey(), localStorage.getItem('expenseAppData'));
+                }
+                if (localStorage.getItem(localActiveEventKey()) === null && localStorage.getItem('activeEventId') !== null) {
+                    localStorage.setItem(localActiveEventKey(), localStorage.getItem('activeEventId'));
+                }
+            }
+            migrateLegacyLocalStorage();
+
+            function copyInviteLink() {
+                const url = new URL(window.location.href);
+                url.searchParams.set('g', groupId);
+                const link = url.toString();
+                navigator.clipboard.writeText(link).then(() => {
+                    showToast('Ссылка скопирована! Отправьте её друзьям');
+                }).catch(() => {
+                    const ta = document.createElement('textarea');
+                    ta.value = link;
+                    document.body.appendChild(ta);
+                    ta.select();
+                    document.execCommand('copy');
+                    document.body.removeChild(ta);
+                    showToast('Ссылка скопирована! Отправьте её друзьям');
+                });
+            }
+
+            function createNewGroup() {
+                if (!confirm('Создать новую группу? Откроется чистый список событий, отдельный от текущего.')) return;
+                const newId = generateGroupId();
+                localStorage.setItem('myGroupId', newId);
+                const url = new URL(window.location.href);
+                url.searchParams.set('g', newId);
+                window.location.href = url.toString();
+            }
+
+            function joinGroupPrompt() {
+                const input = prompt('Вставьте ссылку или код группы, которым поделился друг:');
+                if (!input) return;
+                let candidate = input.trim();
+                try {
+                    const maybeUrl = new URL(candidate);
+                    const g = maybeUrl.searchParams.get('g');
+                    if (g) candidate = g;
+                } catch (e) { /* это не ссылка — считаем, что ввели сам код */ }
+                const clean = sanitizeGroupId(candidate);
+                if (!clean) { alert('Не удалось распознать код группы'); return; }
+                localStorage.setItem('myGroupId', clean);
+                const url = new URL(window.location.href);
+                url.searchParams.set('g', clean);
+                window.location.href = url.toString();
+            }
+
             let events = [];
             let activeEventId = null;
             let idCounter = 0;
@@ -988,6 +1203,10 @@
             const copyResultBtn = document.getElementById('copyResultBtn');
             const toast = document.getElementById('toast');
 
+            const totalExpensesValue = document.getElementById('totalExpensesValue');
+            const myExpensesValue = document.getElementById('myExpensesValue');
+            const currentMemberSelect = document.getElementById('currentMemberSelect');
+
             function generateId() { return ++idCounter; }
 
             function getActiveEvent() {
@@ -1012,17 +1231,17 @@
             function saveState() {
                 // Какое событие сейчас открыто — личная настройка этого браузера, не шарим её
                 if (activeEventId) {
-                    localStorage.setItem('activeEventId', activeEventId);
+                    localStorage.setItem(localActiveEventKey(), activeEventId);
                 } else {
-                    localStorage.removeItem('activeEventId');
+                    localStorage.removeItem(localActiveEventKey());
                 }
 
                 // Локальную копию сохраняем ВСЕГДА — это подстраховка на случай,
                 // если облако недоступно (нет сети, не настроены правила доступа и т.п.)
-                localStorage.setItem('expenseAppData', JSON.stringify({ events, idCounter }));
+                localStorage.setItem(localDataKey(), JSON.stringify({ events, idCounter }));
 
                 if (FIREBASE_ENABLED && db) {
-                    db.doc('sharedData/main').set({ events, idCounter }).catch(err => {
+                    db.doc(groupDocPath).set({ events, idCounter }).catch(err => {
                         console.error('Firebase save error:', err);
                         showToast('Облако: ошибка сохранения (' + (err.code || err.message) + ')');
                     });
@@ -1030,12 +1249,12 @@
             }
 
             function loadLocalActiveEvent() {
-                const saved = localStorage.getItem('activeEventId');
+                const saved = localStorage.getItem(localActiveEventKey());
                 activeEventId = saved ? parseInt(saved) : null;
             }
 
             function loadLocalBackup() {
-                const raw = localStorage.getItem('expenseAppData');
+                const raw = localStorage.getItem(localDataKey());
                 let data = { events: [], idCounter: 0 };
                 if (raw) {
                     try { data = JSON.parse(raw); } catch (e) { /* оставляем пустые данные */ }
@@ -1047,7 +1266,7 @@
                 loadLocalActiveEvent();
 
                 if (FIREBASE_ENABLED && db) {
-                    db.doc('sharedData/main').onSnapshot(
+                    db.doc(groupDocPath).onSnapshot(
                         docSnap => {
                             applyRemoteData(docSnap.exists ? docSnap.data() : { events: [], idCounter: 0 });
                         },
@@ -1226,6 +1445,7 @@
                     memberCount.textContent = '0';
                 }
                 updatePayerSelect();
+                updateCurrentMemberSelect();
             }
 
             function renderExpenses() {
@@ -1385,6 +1605,110 @@
                     if (current && ev.members.some(m => m.id == current)) {
                         payerSelect.value = current;
                     }
+                }
+            }
+
+            // "Кто я" — личная настройка этого браузера/устройства, для каждого события своя,
+            // нигде не шарится, хранится только в localStorage
+            function getCurrentMemberStorageKey() {
+                return activeEventId ? ('currentMemberId_' + groupId + '_' + activeEventId) : null;
+            }
+
+            function getCurrentMemberId() {
+                const key = getCurrentMemberStorageKey();
+                if (!key) return null;
+                const saved = localStorage.getItem(key);
+                return saved ? parseInt(saved) : null;
+            }
+
+            function setCurrentMemberId(id) {
+                const key = getCurrentMemberStorageKey();
+                if (!key) return;
+                if (id) {
+                    localStorage.setItem(key, id);
+                } else {
+                    localStorage.removeItem(key);
+                }
+            }
+
+            function updateCurrentMemberSelect() {
+                const ev = getActiveEvent();
+                currentMemberSelect.innerHTML = '<option value="">Кто я?</option>';
+                if (ev) {
+                    ev.members.forEach(m => {
+                        const opt = document.createElement('option');
+                        opt.value = m.id;
+                        opt.textContent = m.name;
+                        currentMemberSelect.appendChild(opt);
+                    });
+                    const savedId = getCurrentMemberId();
+                    if (savedId && ev.members.some(m => m.id === savedId)) {
+                        currentMemberSelect.value = savedId;
+                    } else {
+                        currentMemberSelect.value = '';
+                    }
+                }
+                updateSummaryStats();
+            }
+
+            // ====== Анимация "прокрутки" чисел (как счётчик на табло) ======
+            const animatedValues = new WeakMap(); // el -> текущее отображаемое число
+
+            function easeOutCubic(t) {
+                return 1 - Math.pow(1 - t, 3);
+            }
+
+            function animateNumberTo(el, target, suffix) {
+                suffix = suffix || '';
+                const from = animatedValues.has(el) ? animatedValues.get(el) : target;
+                if (from === target) {
+                    el.textContent = target.toLocaleString() + suffix;
+                    animatedValues.set(el, target);
+                    return;
+                }
+
+                if (el._animFrame) cancelAnimationFrame(el._animFrame);
+
+                const duration = Math.min(900, Math.max(350, Math.abs(target - from) * 2));
+                const startTime = performance.now();
+
+                function step(now) {
+                    const elapsed = now - startTime;
+                    const t = Math.min(1, elapsed / duration);
+                    const eased = easeOutCubic(t);
+                    const current = Math.round(from + (target - from) * eased);
+                    el.textContent = current.toLocaleString() + suffix;
+                    if (t < 1) {
+                        el._animFrame = requestAnimationFrame(step);
+                    } else {
+                        el.textContent = target.toLocaleString() + suffix;
+                        animatedValues.set(el, target);
+                        el._animFrame = null;
+                    }
+                }
+                el._animFrame = requestAnimationFrame(step);
+            }
+
+            function updateSummaryStats() {
+                const ev = getActiveEvent();
+                if (!ev) {
+                    animateNumberTo(totalExpensesValue, 0, ' ₽');
+                    myExpensesValue.textContent = '0 ₽';
+                    animatedValues.delete(myExpensesValue);
+                    return;
+                }
+                const total = ev.expenses.reduce((sum, e) => sum + e.amount, 0);
+                animateNumberTo(totalExpensesValue, total, ' ₽');
+
+                const myId = getCurrentMemberId();
+                if (myId && ev.members.some(m => m.id === myId)) {
+                    const mine = ev.expenses
+                        .filter(e => e.payer === myId)
+                        .reduce((sum, e) => sum + e.amount, 0);
+                    animateNumberTo(myExpensesValue, mine, ' ₽');
+                } else {
+                    myExpensesValue.textContent = '—';
+                    animatedValues.delete(myExpensesValue);
                 }
             }
 
@@ -1665,6 +1989,11 @@
 
             function init() {
                 loadTheme();
+                document.getElementById('groupIdLabel').textContent = groupId;
+                document.getElementById('inviteBtn').addEventListener('click', copyInviteLink);
+                document.getElementById('joinGroupBtn').addEventListener('click', joinGroupPrompt);
+                document.getElementById('newGroupBtn').addEventListener('click', createNewGroup);
+
                 startSync();
 
                 addEventBtn.addEventListener('click', createEvent);
@@ -1678,6 +2007,12 @@
                 expenseAmount.addEventListener('keydown', (e) => { if (e.key === 'Enter') addExpense(); });
 
                 copyResultBtn.addEventListener('click', copyResult);
+
+                currentMemberSelect.addEventListener('change', () => {
+                    const val = currentMemberSelect.value ? parseInt(currentMemberSelect.value) : null;
+                    setCurrentMemberId(val);
+                    updateSummaryStats();
+                });
             }
 
             init();
