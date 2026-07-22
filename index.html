@@ -1106,14 +1106,17 @@
                     window.history.replaceState({}, '', url);
                     return saved;
                 }
-                // Самый первый запуск на этом устройстве — используем старое общее
-                // хранилище, чтобы не потерять данные, с которыми уже работали
-                const legacy = 'main';
-                localStorage.setItem('myGroupId', legacy);
+                // Если в этом браузере есть данные, сохранённые ДО появления групп —
+                // сохраняем совместимость и продолжаем работать с ними под кодом "main".
+                // Если же это действительно новый посетитель без всякой истории —
+                // сразу выдаём ему уникальный случайный код, а не "main".
+                const hasLegacyData = localStorage.getItem('expenseAppData') !== null;
+                const newGroupId = hasLegacyData ? 'main' : generateGroupId();
+                localStorage.setItem('myGroupId', newGroupId);
                 const url = new URL(window.location.href);
-                url.searchParams.set('g', legacy);
+                url.searchParams.set('g', newGroupId);
                 window.history.replaceState({}, '', url);
-                return legacy;
+                return newGroupId;
             }
 
             const groupId = resolveGroupId();
