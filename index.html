@@ -200,6 +200,69 @@
             color: var(--text-primary);
             transition: color 0.3s;
         }
+        .tagline {
+            display: block;
+            font-size: 13.5px;
+            color: var(--text-secondary);
+            margin-top: 4px;
+            font-weight: 400;
+            transition: color 0.3s;
+        }
+        .header-controls {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+            justify-content: flex-end;
+        }
+        .lang-toggle {
+            cursor: pointer;
+            user-select: none;
+            padding: 5px 14px;
+            border-radius: 999px;
+            border: 1px solid var(--border-light);
+            font-size: 12px;
+            font-weight: 700;
+            font-family: var(--font-mono);
+            letter-spacing: 0.06em;
+            color: var(--text-secondary);
+            background: var(--bg-chip);
+            transition: border-color 0.2s, color 0.2s, background 0.3s;
+        }
+        .lang-toggle:hover {
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+        .group-bar-left {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 14px;
+        }
+        .currency-picker {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 13px;
+            color: var(--text-secondary);
+            transition: color 0.3s;
+        }
+        .currency-picker select {
+            font-family: var(--font-body);
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text-primary);
+            background: var(--bg-input);
+            border: 1px solid var(--border-light);
+            border-radius: var(--radius-btn);
+            padding: 3px 10px;
+            cursor: pointer;
+            outline: none;
+            transition: border-color 0.2s, background 0.3s, color 0.3s;
+        }
+        .currency-picker select:focus {
+            border-color: var(--accent);
+        }
         .theme-toggle {
             display: flex;
             align-items: center;
@@ -929,30 +992,50 @@
             <div class="app-header">
                 <div>
                     <h1>Складчина</h1>
+                    <span class="tagline" data-i18n="tagline">Кто сколько потратил — и кто кому должен</span>
                 </div>
-                <div class="theme-toggle" id="themeToggle" role="button" tabindex="0" aria-label="Переключить тему">
-                    <span class="toggle-label" id="themeLabel">Светлая</span>
-                    <div class="toggle-track">
-                        <div class="toggle-dot"></div>
+                <div class="header-controls">
+                    <div class="lang-toggle" id="langToggle" role="button" tabindex="0" aria-label="Switch language / Переключить язык">
+                        <span id="langLabel">RU</span>
+                    </div>
+                    <div class="theme-toggle" id="themeToggle" role="button" tabindex="0" aria-label="Переключить тему">
+                        <span class="toggle-label" id="themeLabel">Светлая</span>
+                        <div class="toggle-track">
+                            <div class="toggle-dot"></div>
+                        </div>
                     </div>
                 </div>
             </div>
 
             <div class="group-bar" id="groupBar">
-                <span class="group-info">👥 Группа: <span id="groupIdLabel"></span></span>
+                <div class="group-bar-left">
+                    <span class="group-info">👥 <span data-i18n="group_label">Группа</span>: <span id="groupIdLabel"></span></span>
+                    <span class="currency-picker">
+                        <label for="currencySelect" data-i18n="currency_label">Валюта</label>
+                        <select id="currencySelect">
+                            <option value="RUB">₽ RUB</option>
+                            <option value="USD">$ USD</option>
+                            <option value="EUR">€ EUR</option>
+                            <option value="KZT">₸ KZT</option>
+                            <option value="UAH">₴ UAH</option>
+                            <option value="BYN">Br BYN</option>
+                            <option value="GBP">£ GBP</option>
+                        </select>
+                    </span>
+                </div>
                 <div class="group-actions">
-                    <button class="btn btn-outline btn-sm" id="inviteBtn" type="button">🔗 Пригласить</button>
-                    <button class="btn btn-outline btn-sm" id="joinGroupBtn" type="button">🔑 Другая группа</button>
-                    <button class="btn btn-outline btn-sm" id="newGroupBtn" type="button">🆕 Новая группа</button>
+                    <button class="btn btn-outline btn-sm" id="inviteBtn" type="button" data-i18n="invite_btn">🔗 Пригласить</button>
+                    <button class="btn btn-outline btn-sm" id="joinGroupBtn" type="button" data-i18n="join_group_btn">🔑 Другая группа</button>
+                    <button class="btn btn-outline btn-sm" id="newGroupBtn" type="button" data-i18n="new_group_btn">🆕 Новая группа</button>
                 </div>
             </div>
 
             <div class="events-section">
                 <div class="flex-row">
                     <div class="field">
-                        <input type="text" id="eventNameInput" placeholder="Название события" />
+                        <input type="text" id="eventNameInput" placeholder="Название события" data-i18n-placeholder="event_name_placeholder" />
                     </div>
-                    <button class="btn btn-primary" id="addEventBtn">Создать</button>
+                    <button class="btn btn-primary" id="addEventBtn" data-i18n="create_btn">Создать</button>
                 </div>
                 <div class="events-list" id="eventsList"></div>
             </div>
@@ -963,14 +1046,14 @@
         <div id="activeEventContent">
             <div class="summary-row" id="summaryRow">
                 <div class="stat-card">
-                    <span class="stat-label">Общие расходы</span>
+                    <span class="stat-label" data-i18n="total_expenses_label">Общие расходы</span>
                     <span class="stat-value" id="totalExpensesValue">0 ₽</span>
                 </div>
                 <div class="stat-card stat-mine">
                     <div class="stat-mine-top">
-                        <span class="stat-label">Мои расходы</span>
+                        <span class="stat-label" data-i18n="my_expenses_label">Мои расходы</span>
                         <select class="stat-select" id="currentMemberSelect">
-                            <option value="">Кто я?</option>
+                            <option value="" data-i18n="who_am_i_option">Кто я?</option>
                         </select>
                     </div>
                     <span class="stat-value" id="myExpensesValue">0 ₽</span>
@@ -979,34 +1062,34 @@
 
             <div class="section">
                 <div class="section-header">
-                    <span>👥 Участники</span>
+                    <span data-i18n="participants_title">👥 Участники</span>
                     <span class="badge" id="memberCount">0</span>
                 </div>
                 <div class="flex-row">
                     <div class="field">
-                        <input type="text" id="memberInput" placeholder="Имя участника" />
+                        <input type="text" id="memberInput" placeholder="Имя участника" data-i18n-placeholder="member_name_placeholder" />
                     </div>
-                    <button class="btn btn-primary" id="addMemberBtn">Добавить</button>
+                    <button class="btn btn-primary" id="addMemberBtn" data-i18n="add_btn">Добавить</button>
                 </div>
                 <div class="chip-list" id="memberList"></div>
             </div>
 
             <div class="section">
                 <div class="section-header">
-                    <span>💸 Расходы</span>
+                    <span data-i18n="expenses_title">💸 Расходы</span>
                     <span class="badge" id="expenseCount">0</span>
                 </div>
                 <div class="flex-row" style="margin-bottom:6px;">
                     <div class="field">
                         <select id="payerSelect">
-                            <option value="">— плательщик —</option>
+                            <option value="" data-i18n="payer_placeholder">— плательщик —</option>
                         </select>
                     </div>
                     <div class="field">
-                        <input type="text" id="expenseDesc" placeholder="За что (еда, такси…)" />
+                        <input type="text" id="expenseDesc" placeholder="За что (еда, такси…)" data-i18n-placeholder="expense_desc_placeholder" />
                     </div>
                     <div class="field-sm">
-                        <input type="number" id="expenseAmount" placeholder="Сумма" min="0" step="any" />
+                        <input type="number" id="expenseAmount" placeholder="Сумма" min="0" step="any" data-i18n-placeholder="amount_placeholder" />
                     </div>
                     <button class="btn btn-success" id="addExpenseBtn">➕</button>
                 </div>
@@ -1016,8 +1099,8 @@
             <div id="resultContainer">
                 <div class="result-box" id="resultBox" style="display:none;">
                     <div class="result-header">
-                        <h3>⚖️ Кто кому должен</h3>
-                        <button class="btn-copy" id="copyResultBtn">📋 Копировать</button>
+                        <h3 data-i18n="who_owes_whom_title">⚖️ Кто кому должен</h3>
+                        <button class="btn-copy" id="copyResultBtn" data-i18n="copy_btn">📋 Копировать</button>
                     </div>
                     <ul class="debt-list" id="debtList"></ul>
                 </div>
@@ -1025,10 +1108,176 @@
         </div>
     </div>
 
-    <div class="toast" id="toast">Скопировано!</div>
+    <div class="toast" id="toast" data-i18n="copied_toast">Скопировано!</div>
 
     <script>
         (function() {
+            // ====== ЯЗЫК (личная настройка браузера, не шарится) ======
+            const T = {
+                ru: {
+                    page_title: 'Складчина — калькулятор общих расходов',
+                    tagline: 'Кто сколько потратил — и кто кому должен',
+                    theme_light: 'Светлая',
+                    theme_dark: 'Тёмная',
+                    group_label: 'Группа',
+                    currency_label: 'Валюта',
+                    invite_btn: '🔗 Пригласить',
+                    join_group_btn: '🔑 Другая группа',
+                    new_group_btn: '🆕 Новая группа',
+                    event_name_placeholder: 'Название события',
+                    create_btn: 'Создать',
+                    no_events: 'Нет событий. Создайте первое!',
+                    total_expenses_label: 'Общие расходы',
+                    my_expenses_label: 'Мои расходы',
+                    who_am_i_option: 'Кто я?',
+                    participants_title: '👥 Участники',
+                    member_name_placeholder: 'Имя участника',
+                    add_btn: 'Добавить',
+                    expenses_title: '💸 Расходы',
+                    payer_placeholder: '— плательщик —',
+                    expense_desc_placeholder: 'За что (еда, такси…)',
+                    amount_placeholder: 'Сумма',
+                    who_owes_whom_title: '⚖️ Кто кому должен',
+                    copy_btn: '📋 Копировать',
+                    copied_toast: 'Скопировано!',
+                    exclude_hint: 'Отметьте, кого исключить из этого расхода:',
+                    desc_edit_placeholder: 'Описание',
+                    save_btn: 'Сохранить',
+                    cancel_btn: 'Отмена',
+                    select_event_placeholder: 'Выберите событие',
+                    no_expenses_yet: 'Пока нет расходов',
+                    all_settled: 'Все уже расплатились поровну 👍',
+                    alert_create_event_first: 'Сначала создайте событие',
+                    alert_enter_name: 'Введите имя',
+                    alert_member_exists: 'Такой участник уже есть в этом событии',
+                    confirm_delete_member: 'Удалить участника и все его расходы?',
+                    alert_add_member_first: 'Добавьте хотя бы одного участника',
+                    alert_choose_payer: 'Выберите плательщика',
+                    alert_enter_amount: 'Введите сумму',
+                    default_desc: 'Без описания',
+                    default_name: 'Без имени',
+                    default_event_name: 'Без названия',
+                    alert_event_name_required: 'Введите название события',
+                    alert_event_exists: 'Событие с таким названием уже существует',
+                    alert_member_name_exists: 'Участник с таким именем уже существует',
+                    confirm_delete_event: 'Удалить событие и все его данные?',
+                    toast_invite_copied: 'Ссылка скопирована! Отправьте её друзьям',
+                    confirm_new_group: 'Создать новую группу? Откроется чистый список событий, отдельный от текущего.',
+                    prompt_join_group: 'Вставьте ссылку или код группы, которым поделился друг:',
+                    alert_invalid_group_code: 'Не удалось распознать код группы',
+                    toast_save_error: 'Облако: ошибка сохранения',
+                    toast_sync_error: 'Нет связи с облаком',
+                    toast_sync_error_suffix: '— показаны локальные данные',
+                    toast_local_mode: 'Работает локально — настрой Firebase для общего доступа',
+                    toast_no_debts_to_copy: 'Нет долгов для копирования',
+                    copy_result_event_label: 'Событие',
+                    copy_result_who_owes: 'Кто кому должен:',
+                    unknown_payer: '❓'
+                },
+                en: {
+                    page_title: 'Skladchina — shared expense calculator',
+                    tagline: 'Who spent what — and who owes whom',
+                    theme_light: 'Light',
+                    theme_dark: 'Dark',
+                    group_label: 'Group',
+                    currency_label: 'Currency',
+                    invite_btn: '🔗 Invite',
+                    join_group_btn: '🔑 Switch group',
+                    new_group_btn: '🆕 New group',
+                    event_name_placeholder: 'Event name',
+                    create_btn: 'Create',
+                    no_events: 'No events yet. Create the first one!',
+                    total_expenses_label: 'Total expenses',
+                    my_expenses_label: 'My expenses',
+                    who_am_i_option: 'Who am I?',
+                    participants_title: '👥 Participants',
+                    member_name_placeholder: 'Participant name',
+                    add_btn: 'Add',
+                    expenses_title: '💸 Expenses',
+                    payer_placeholder: '— payer —',
+                    expense_desc_placeholder: 'What for (food, taxi…)',
+                    amount_placeholder: 'Amount',
+                    who_owes_whom_title: '⚖️ Who owes whom',
+                    copy_btn: '📋 Copy',
+                    copied_toast: 'Copied!',
+                    exclude_hint: 'Check who to exclude from this expense:',
+                    desc_edit_placeholder: 'Description',
+                    save_btn: 'Save',
+                    cancel_btn: 'Cancel',
+                    select_event_placeholder: 'Select an event',
+                    no_expenses_yet: 'No expenses yet',
+                    all_settled: 'Everyone is settled up 👍',
+                    alert_create_event_first: 'Create an event first',
+                    alert_enter_name: 'Enter a name',
+                    alert_member_exists: 'This participant already exists in this event',
+                    confirm_delete_member: 'Delete this participant and all their expenses?',
+                    alert_add_member_first: 'Add at least one participant',
+                    alert_choose_payer: 'Choose a payer',
+                    alert_enter_amount: 'Enter an amount',
+                    default_desc: 'No description',
+                    default_name: 'No name',
+                    default_event_name: 'Untitled',
+                    alert_event_name_required: 'Enter an event name',
+                    alert_event_exists: 'An event with this name already exists',
+                    alert_member_name_exists: 'A participant with this name already exists',
+                    confirm_delete_event: 'Delete this event and all its data?',
+                    toast_invite_copied: 'Link copied! Send it to your friends',
+                    confirm_new_group: 'Create a new group? This opens a clean list of events, separate from the current one.',
+                    prompt_join_group: "Paste the link or code your friend shared:",
+                    alert_invalid_group_code: 'Could not recognize the group code',
+                    toast_save_error: 'Cloud: save error',
+                    toast_sync_error: 'No connection to the cloud',
+                    toast_sync_error_suffix: '— showing local data',
+                    toast_local_mode: 'Working locally — set up Firebase for shared access',
+                    toast_no_debts_to_copy: 'No debts to copy',
+                    copy_result_event_label: 'Event',
+                    copy_result_who_owes: 'Who owes whom:',
+                    unknown_payer: '❓'
+                }
+            };
+
+            let lang = localStorage.getItem('lang') || 'ru';
+
+            function t(key) {
+                return (T[lang] && T[lang][key] !== undefined) ? T[lang][key] : (T.ru[key] || key);
+            }
+
+            function applyStaticTranslations() {
+                document.documentElement.lang = lang;
+                document.title = t('page_title');
+                document.querySelectorAll('[data-i18n]').forEach(el => {
+                    el.textContent = t(el.getAttribute('data-i18n'));
+                });
+                document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+                    el.placeholder = t(el.getAttribute('data-i18n-placeholder'));
+                });
+                document.getElementById('langLabel').textContent = lang.toUpperCase();
+                setTheme(document.body.classList.contains('dark-theme') ? 'dark' : 'light');
+            }
+
+            function setLanguage(newLang) {
+                lang = newLang;
+                localStorage.setItem('lang', lang);
+                applyStaticTranslations();
+                renderAll();
+            }
+
+            // ====== ВАЛЮТА (общая настройка группы — все участники видят одну валюту) ======
+            const CURRENCIES = { RUB: '₽', USD: '$', EUR: '€', KZT: '₸', UAH: '₴', BYN: 'Br', GBP: '£' };
+            let currency = 'RUB';
+
+            function curSymbol() {
+                return CURRENCIES[currency] || currency;
+            }
+
+            function setCurrency(code) {
+                if (!CURRENCIES[code]) return;
+                currency = code;
+                document.getElementById('currencySelect').value = currency;
+                saveState();
+                renderAll();
+            }
+
             const themeToggle = document.getElementById('themeToggle');
             const themeLabel = document.getElementById('themeLabel');
             const body = document.body;
@@ -1036,10 +1285,10 @@
             function setTheme(theme) {
                 if (theme === 'dark') {
                     body.classList.add('dark-theme');
-                    themeLabel.textContent = 'Тёмная';
+                    themeLabel.textContent = t('theme_dark');
                 } else {
                     body.classList.remove('dark-theme');
-                    themeLabel.textContent = 'Светлая';
+                    themeLabel.textContent = t('theme_light');
                 }
                 localStorage.setItem('theme', theme);
             }
@@ -1142,7 +1391,7 @@
                 url.searchParams.set('g', groupId);
                 const link = url.toString();
                 navigator.clipboard.writeText(link).then(() => {
-                    showToast('Ссылка скопирована! Отправьте её друзьям');
+                    showToast(t('toast_invite_copied'));
                 }).catch(() => {
                     const ta = document.createElement('textarea');
                     ta.value = link;
@@ -1150,12 +1399,12 @@
                     ta.select();
                     document.execCommand('copy');
                     document.body.removeChild(ta);
-                    showToast('Ссылка скопирована! Отправьте её друзьям');
+                    showToast(t('toast_invite_copied'));
                 });
             }
 
             function createNewGroup() {
-                if (!confirm('Создать новую группу? Откроется чистый список событий, отдельный от текущего.')) return;
+                if (!confirm(t('confirm_new_group'))) return;
                 const newId = generateGroupId();
                 localStorage.setItem('myGroupId', newId);
                 const url = new URL(window.location.href);
@@ -1164,7 +1413,7 @@
             }
 
             function joinGroupPrompt() {
-                const input = prompt('Вставьте ссылку или код группы, которым поделился друг:');
+                const input = prompt(t('prompt_join_group'));
                 if (!input) return;
                 let candidate = input.trim();
                 try {
@@ -1173,7 +1422,7 @@
                     if (g) candidate = g;
                 } catch (e) { /* это не ссылка — считаем, что ввели сам код */ }
                 const clean = sanitizeGroupId(candidate);
-                if (!clean) { alert('Не удалось распознать код группы'); return; }
+                if (!clean) { alert(t('alert_invalid_group_code')); return; }
                 localStorage.setItem('myGroupId', clean);
                 const url = new URL(window.location.href);
                 url.searchParams.set('g', clean);
@@ -1225,6 +1474,9 @@
             function applyRemoteData(data) {
                 events = (data && data.events) || [];
                 idCounter = (data && data.idCounter) || 0;
+                currency = (data && data.currency && CURRENCIES[data.currency]) ? data.currency : 'RUB';
+                const currencySelectEl = document.getElementById('currencySelect');
+                if (currencySelectEl) currencySelectEl.value = currency;
                 if (activeEventId && !events.some(e => e.id === activeEventId)) {
                     activeEventId = events.length > 0 ? events[0].id : null;
                 }
@@ -1241,12 +1493,12 @@
 
                 // Локальную копию сохраняем ВСЕГДА — это подстраховка на случай,
                 // если облако недоступно (нет сети, не настроены правила доступа и т.п.)
-                localStorage.setItem(localDataKey(), JSON.stringify({ events, idCounter }));
+                localStorage.setItem(localDataKey(), JSON.stringify({ events, idCounter, currency }));
 
                 if (FIREBASE_ENABLED && db) {
-                    db.doc(groupDocPath).set({ events, idCounter }).catch(err => {
+                    db.doc(groupDocPath).set({ events, idCounter, currency }).catch(err => {
                         console.error('Firebase save error:', err);
-                        showToast('Облако: ошибка сохранения (' + (err.code || err.message) + ')');
+                        showToast(t('toast_save_error') + ' (' + (err.code || err.message) + ')');
                     });
                 }
             }
@@ -1275,7 +1527,7 @@
                         },
                         err => {
                             console.error('Firebase sync error:', err);
-                            showToast('Нет связи с облаком (' + (err.code || err.message) + ') — показаны локальные данные');
+                            showToast(t('toast_sync_error') + ' (' + (err.code || err.message) + ') ' + t('toast_sync_error_suffix'));
                             // Если облако недоступно, показываем то, что сохранено локально в этом браузере,
                             // а не пустой экран
                             applyRemoteData(loadLocalBackup());
@@ -1283,7 +1535,7 @@
                     );
                 } else {
                     applyRemoteData(loadLocalBackup());
-                    showToast('Работает локально — настрой Firebase для общего доступа');
+                    showToast(t('toast_local_mode'));
                 }
             }
 
@@ -1292,7 +1544,7 @@
                 if (events.length === 0) {
                     const placeholder = document.createElement('span');
                     placeholder.className = 'empty-msg';
-                    placeholder.textContent = 'Нет событий. Создайте первое!';
+                    placeholder.textContent = t('no_events');
                     eventsList.appendChild(placeholder);
                     return;
                 }
@@ -1310,10 +1562,10 @@
                         document.execCommand('selectAll', false, null);
                     });
                     nameSpan.addEventListener('blur', () => {
-                        const newName = nameSpan.textContent.trim() || 'Без названия';
+                        const newName = nameSpan.textContent.trim() || t('default_event_name');
                         if (newName !== ev.name) {
                             if (events.some(e => e.id !== ev.id && e.name.toLowerCase() === newName.toLowerCase())) {
-                                alert('Событие с таким названием уже существует');
+                                alert(t('alert_event_exists'));
                                 nameSpan.textContent = ev.name;
                                 return;
                             }
@@ -1362,9 +1614,9 @@
 
             function createEvent() {
                 const name = eventNameInput.value.trim();
-                if (!name) { alert('Введите название события'); return; }
+                if (!name) { alert(t('alert_event_name_required')); return; }
                 if (events.some(e => e.name.toLowerCase() === name.toLowerCase())) {
-                    alert('Событие с таким названием уже существует');
+                    alert(t('alert_event_exists'));
                     return;
                 }
                 const newEvent = {
@@ -1382,7 +1634,7 @@
             }
 
             function deleteEvent(id) {
-                if (!confirm('Удалить событие и все его данные?')) return;
+                if (!confirm(t('confirm_delete_event'))) return;
                 events = events.filter(e => e.id !== id);
                 if (activeEventId === id) {
                     activeEventId = events.length > 0 ? events[0].id : null;
@@ -1410,10 +1662,10 @@
                             document.execCommand('selectAll', false, null);
                         });
                         nameSpan.addEventListener('blur', () => {
-                            const newName = nameSpan.textContent.trim() || 'Без имени';
+                            const newName = nameSpan.textContent.trim() || t('default_name');
                             if (newName !== m.name) {
                                 if (ev.members.some(mm => mm.id !== m.id && mm.name.toLowerCase() === newName.toLowerCase())) {
-                                    alert('Участник с таким именем уже существует');
+                                    alert(t('alert_member_name_exists'));
                                     nameSpan.textContent = m.name;
                                     return;
                                 }
@@ -1456,11 +1708,11 @@
                 expenseList.innerHTML = '';
                 if (!ev) {
                     expenseCount.textContent = '0';
-                    expenseList.innerHTML = '<div class="empty-msg">Выберите событие</div>';
+                    expenseList.innerHTML = '<div class="empty-msg">' + t('select_event_placeholder') + '</div>';
                     return;
                 }
                 if (ev.expenses.length === 0) {
-                    expenseList.innerHTML = '<div class="empty-msg">Пока нет расходов</div>';
+                    expenseList.innerHTML = '<div class="empty-msg">' + t('no_expenses_yet') + '</div>';
                 } else {
                     ev.expenses.forEach(e => {
                         const div = document.createElement('div');
@@ -1470,7 +1722,7 @@
                         // Display mode
                         const displayMode = document.createElement('div');
                         displayMode.className = 'display-mode';
-                        const payerName = ev.members.find(m => m.id === e.payer)?.name || '❓';
+                        const payerName = ev.members.find(m => m.id === e.payer)?.name || t('unknown_payer');
                         let excludedNames = [];
                         if (e.excluded && e.excluded.length > 0) {
                             excludedNames = e.excluded.map(id => {
@@ -1484,7 +1736,7 @@
                                 <span class="payer">${payerName}</span>
                                 <span class="desc">${e.description || '—'}</span>
                                 <span class="excluded-info">${exclText}</span>
-                                <span class="amount">${Number(e.amount).toLocaleString()} ₽</span>
+                                <span class="amount">${Number(e.amount).toLocaleString()} ${curSymbol()}</span>
                             </div>
                             <span class="del" data-id="${e.id}">✕</span>
                         `;
@@ -1522,7 +1774,7 @@
                         const descInput = document.createElement('input');
                         descInput.type = 'text';
                         descInput.value = e.description || '';
-                        descInput.placeholder = 'Описание';
+                        descInput.placeholder = t('desc_edit_placeholder');
                         descField.appendChild(descInput);
                         editRow.appendChild(descField);
 
@@ -1531,7 +1783,7 @@
                         const amountInput = document.createElement('input');
                         amountInput.type = 'number';
                         amountInput.value = e.amount || '';
-                        amountInput.placeholder = 'Сумма';
+                        amountInput.placeholder = t('amount_placeholder');
                         amountInput.min = '0';
                         amountInput.step = 'any';
                         amountField.appendChild(amountInput);
@@ -1542,7 +1794,7 @@
                         // Exclude checkboxes
                         const exclHint = document.createElement('div');
                         exclHint.className = 'exclude-hint';
-                        exclHint.textContent = 'Отметьте, кого исключить из этого расхода:';
+                        exclHint.textContent = t('exclude_hint');
                         editMode.appendChild(exclHint);
 
                         const exclContainer = document.createElement('div');
@@ -1564,14 +1816,14 @@
                         actions.className = 'edit-actions';
                         const saveBtn = document.createElement('button');
                         saveBtn.className = 'btn btn-primary btn-sm';
-                        saveBtn.textContent = 'Сохранить';
+                        saveBtn.textContent = t('save_btn');
                         saveBtn.addEventListener('click', (evt) => {
                             evt.stopPropagation();
                             saveExpenseInline(e.id);
                         });
                         const cancelBtn = document.createElement('button');
                         cancelBtn.className = 'btn btn-danger btn-sm';
-                        cancelBtn.textContent = 'Отмена';
+                        cancelBtn.textContent = t('cancel_btn');
                         cancelBtn.addEventListener('click', (evt) => {
                             evt.stopPropagation();
                             cancelEditing();
@@ -1597,7 +1849,7 @@
             function updatePayerSelect() {
                 const ev = getActiveEvent();
                 const current = payerSelect.value;
-                payerSelect.innerHTML = '<option value="">— плательщик —</option>';
+                payerSelect.innerHTML = '<option value="">' + t('payer_placeholder') + '</option>';
                 if (ev) {
                     ev.members.forEach(m => {
                         const opt = document.createElement('option');
@@ -1636,7 +1888,7 @@
 
             function updateCurrentMemberSelect() {
                 const ev = getActiveEvent();
-                currentMemberSelect.innerHTML = '<option value="">Кто я?</option>';
+                currentMemberSelect.innerHTML = '<option value="">' + t('who_am_i_option') + '</option>';
                 if (ev) {
                     ev.members.forEach(m => {
                         const opt = document.createElement('option');
@@ -1695,20 +1947,20 @@
             function updateSummaryStats() {
                 const ev = getActiveEvent();
                 if (!ev) {
-                    animateNumberTo(totalExpensesValue, 0, ' ₽');
-                    myExpensesValue.textContent = '0 ₽';
+                    animateNumberTo(totalExpensesValue, 0, ' ' + curSymbol());
+                    myExpensesValue.textContent = '0 ' + curSymbol();
                     animatedValues.delete(myExpensesValue);
                     return;
                 }
                 const total = ev.expenses.reduce((sum, e) => sum + e.amount, 0);
-                animateNumberTo(totalExpensesValue, total, ' ₽');
+                animateNumberTo(totalExpensesValue, total, ' ' + curSymbol());
 
                 const myId = getCurrentMemberId();
                 if (myId && ev.members.some(m => m.id === myId)) {
                     const mine = ev.expenses
                         .filter(e => e.payer === myId)
                         .reduce((sum, e) => sum + e.amount, 0);
-                    animateNumberTo(myExpensesValue, mine, ' ₽');
+                    animateNumberTo(myExpensesValue, mine, ' ' + curSymbol());
                 } else {
                     myExpensesValue.textContent = '—';
                     animatedValues.delete(myExpensesValue);
@@ -1758,10 +2010,10 @@
                 const checkboxes = item.querySelectorAll('.edit-mode .exclude-checkboxes input[type="checkbox"]');
 
                 const payerId = parseInt(payerSelect.value);
-                if (!payerId) { alert('Выберите плательщика'); return; }
-                const desc = descInput.value.trim() || 'Без описания';
+                if (!payerId) { alert(t('alert_choose_payer')); return; }
+                const desc = descInput.value.trim() || t('default_desc');
                 const amount = parseFloat(amountInput.value);
-                if (isNaN(amount) || amount <= 0) { alert('Введите сумму'); return; }
+                if (isNaN(amount) || amount <= 0) { alert(t('alert_enter_amount')); return; }
 
                 const excluded = [];
                 checkboxes.forEach(cb => {
@@ -1780,11 +2032,11 @@
 
             function addMember() {
                 const ev = getActiveEvent();
-                if (!ev) { alert('Сначала создайте событие'); return; }
+                if (!ev) { alert(t('alert_create_event_first')); return; }
                 const name = memberInput.value.trim();
-                if (!name) { alert('Введите имя'); return; }
+                if (!name) { alert(t('alert_enter_name')); return; }
                 if (ev.members.some(m => m.name.toLowerCase() === name.toLowerCase())) {
-                    alert('Такой участник уже есть в этом событии');
+                    alert(t('alert_member_exists'));
                     return;
                 }
                 ev.members.push({ id: generateId(), name });
@@ -1796,7 +2048,7 @@
             function removeMember(id) {
                 const ev = getActiveEvent();
                 if (!ev) return;
-                if (!confirm('Удалить участника и все его расходы?')) return;
+                if (!confirm(t('confirm_delete_member'))) return;
                 ev.members = ev.members.filter(m => m.id !== id);
                 ev.expenses = ev.expenses.filter(e => e.payer !== id);
                 ev.expenses.forEach(e => {
@@ -1812,18 +2064,18 @@
 
             function addExpense() {
                 const ev = getActiveEvent();
-                if (!ev) { alert('Сначала создайте событие'); return; }
+                if (!ev) { alert(t('alert_create_event_first')); return; }
                 if (editingExpenseId) {
                     // если в режиме редактирования, сохраняем
                     saveExpenseInline(editingExpenseId);
                     return;
                 }
-                if (ev.members.length === 0) { alert('Добавьте хотя бы одного участника'); return; }
+                if (ev.members.length === 0) { alert(t('alert_add_member_first')); return; }
                 const payerId = parseInt(payerSelect.value);
-                if (!payerId) { alert('Выберите плательщика'); return; }
-                const desc = expenseDesc.value.trim() || 'Без описания';
+                if (!payerId) { alert(t('alert_choose_payer')); return; }
+                const desc = expenseDesc.value.trim() || t('default_desc');
                 const amount = parseFloat(expenseAmount.value);
-                if (isNaN(amount) || amount <= 0) { alert('Введите сумму'); return; }
+                if (isNaN(amount) || amount <= 0) { alert(t('alert_enter_amount')); return; }
 
                 const excluded = [];
                 // при добавлении нового расхода исключений нет, так как мы убрали общую панель
@@ -1911,15 +2163,15 @@
                 resultBox.style.display = 'block';
                 debtList.innerHTML = '';
                 if (transactions.length === 0) {
-                    debtList.innerHTML = '<li class="empty-msg">Все уже расплатились поровну 👍</li>';
+                    debtList.innerHTML = '<li class="empty-msg">' + t('all_settled') + '</li>';
                 } else {
-                    transactions.forEach(t => {
+                    transactions.forEach(tx => {
                         const li = document.createElement('li');
                         li.innerHTML = `
                             <span class="debt-row">
-                                <span class="names"><span class="from">${t.from}</span> <span class="arrow">→</span> <span class="to">${t.to}</span></span>
+                                <span class="names"><span class="from">${tx.from}</span> <span class="arrow">→</span> <span class="to">${tx.to}</span></span>
                                 <span class="leader"></span>
-                                <span class="sum">${t.amount.toLocaleString()} ₽</span>
+                                <span class="sum">${tx.amount.toLocaleString()} ${curSymbol()}</span>
                             </span>
                         `;
                         debtList.appendChild(li);
@@ -1932,18 +2184,18 @@
                 if (!ev) return;
                 const transactions = getTransactions();
                 if (!transactions || transactions.length === 0) {
-                    showToast('Нет долгов для копирования');
+                    showToast(t('toast_no_debts_to_copy'));
                     return;
                 }
 
-                let text = `Событие: ${ev.name || 'Без названия'}\n`;
-                text += `Кто кому должен:\n`;
-                transactions.forEach(t => {
-                    text += `- ${t.from} должен ${t.to} — ${t.amount.toLocaleString()} ₽\n`;
+                let text = `${t('copy_result_event_label')}: ${ev.name || t('default_event_name')}\n`;
+                text += `${t('copy_result_who_owes')}\n`;
+                transactions.forEach(tx => {
+                    text += `- ${tx.from} → ${tx.to}: ${tx.amount.toLocaleString()} ${curSymbol()}\n`;
                 });
 
                 navigator.clipboard.writeText(text).then(() => {
-                    showToast('Скопировано!');
+                    showToast(t('copied_toast'));
                     copyResultBtn.classList.add('copied');
                     setTimeout(() => copyResultBtn.classList.remove('copied'), 2000);
                 }).catch(() => {
@@ -1953,7 +2205,7 @@
                     textarea.select();
                     document.execCommand('copy');
                     document.body.removeChild(textarea);
-                    showToast('Скопировано!');
+                    showToast(t('copied_toast'));
                     copyResultBtn.classList.add('copied');
                     setTimeout(() => copyResultBtn.classList.remove('copied'), 2000);
                 });
@@ -1992,10 +2244,21 @@
 
             function init() {
                 loadTheme();
+                applyStaticTranslations();
+
                 document.getElementById('groupIdLabel').textContent = groupId;
                 document.getElementById('inviteBtn').addEventListener('click', copyInviteLink);
                 document.getElementById('joinGroupBtn').addEventListener('click', joinGroupPrompt);
                 document.getElementById('newGroupBtn').addEventListener('click', createNewGroup);
+
+                const langToggle = document.getElementById('langToggle');
+                langToggle.addEventListener('click', () => setLanguage(lang === 'ru' ? 'en' : 'ru'));
+                langToggle.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setLanguage(lang === 'ru' ? 'en' : 'ru'); }
+                });
+
+                const currencySelect = document.getElementById('currencySelect');
+                currencySelect.addEventListener('change', () => setCurrency(currencySelect.value));
 
                 startSync();
 
