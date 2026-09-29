@@ -717,17 +717,20 @@
             box-shadow: 0 0 0 4px rgba(31, 93, 78, 0.1);
             background: var(--bg-app);
         }
+        .split-editor .exclude-hint,
         .expense-item .edit-mode .exclude-hint {
             font-size: 12px;
             color: var(--text-muted);
             margin-top: 2px;
         }
+        .split-editor .exclude-checkboxes,
         .expense-item .edit-mode .exclude-checkboxes {
             display: flex;
             flex-wrap: wrap;
             gap: 12px;
             padding: var(--spacing-xs) 0;
         }
+        .split-editor .exclude-checkboxes label,
         .expense-item .edit-mode .exclude-checkboxes label {
             display: flex;
             align-items: center;
@@ -736,6 +739,7 @@
             color: var(--text-primary);
             cursor: pointer;
         }
+        .split-editor .exclude-checkboxes input[type="checkbox"],
         .expense-item .edit-mode .exclude-checkboxes input[type="checkbox"] {
             width: 16px;
             height: 16px;
@@ -833,6 +837,116 @@
         .split-summary.ok {
             color: var(--accent);
         }
+        .new-expense-split {
+            margin: 0 0 12px;
+        }
+        .new-expense-split:empty,
+        .new-expense-split[hidden] {
+            display: none;
+        }
+        .split-editor {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            padding: 8px 10px;
+            background: var(--bg-section);
+            border: 1px solid var(--border-section);
+            border-radius: var(--radius-input);
+        }
+        .edit-mode .split-editor {
+            background: transparent;
+            border: none;
+            padding: 0;
+        }
+        .stat-balance {
+            font-size: 13px;
+            font-weight: 600;
+            min-height: 1.2em;
+        }
+        .stat-balance.owe { color: var(--debt-from); }
+        .stat-balance.owed { color: var(--debt-to); }
+        .stat-balance.even { color: var(--text-muted); font-weight: 500; }
+        .btn-settle {
+            border: 1px solid var(--border-result);
+            background: transparent;
+            color: var(--text-secondary);
+            border-radius: var(--radius-btn);
+            padding: 2px 10px;
+            font-size: 12px;
+            font-family: var(--font-body);
+            cursor: pointer;
+            flex-shrink: 0;
+        }
+        .btn-settle:hover { border-color: var(--accent); color: var(--accent); }
+        .settlements-title {
+            margin-top: 14px;
+            font-family: var(--font-mono);
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: var(--text-muted);
+        }
+        .settlement-list {
+            list-style: none;
+            padding: 4px 0 0;
+            margin: 0;
+        }
+        .settlement-list .remove {
+            cursor: pointer;
+            color: var(--chip-remove);
+            font-weight: 600;
+            font-size: 16px;
+            line-height: 1;
+        }
+        .settlement-list .remove:hover { color: var(--chip-remove-hover); }
+        .settlement-list li {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+            padding: 4px 0;
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+        .recent-groups {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 6px;
+            margin: -4px 0 12px;
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+        .recent-groups[hidden] { display: none; }
+        .recent-groups button {
+            border: 1px solid var(--border-light);
+            background: var(--bg-chip);
+            color: var(--text-secondary);
+            border-radius: var(--radius-btn);
+            padding: 3px 10px;
+            font-family: var(--font-mono);
+            font-size: 12px;
+            cursor: pointer;
+        }
+        .recent-groups button:hover { border-color: var(--accent); color: var(--accent); }
+        .toast.has-action {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            border-radius: 14px;
+            pointer-events: auto;
+        }
+        .toast-undo {
+            border: none;
+            background: transparent;
+            color: inherit;
+            font: inherit;
+            font-weight: 700;
+            text-decoration: underline;
+            cursor: pointer;
+            padding: 0;
+        }
 
         /* ----- Общий бюджет (кто за кого платит) ----- */
         .cover-block {
@@ -915,11 +1029,12 @@
         .debt-row {
             display: flex;
             align-items: baseline;
+            flex-wrap: wrap;
             gap: 6px;
         }
         .debt-row .names {
-            white-space: nowrap;
-            flex-shrink: 0;
+            white-space: normal;
+            flex-shrink: 1;
         }
         .debt-list .from {
             font-weight: 600;
@@ -1072,7 +1187,6 @@
         @media (max-width: 500px) {
             .summary-row { flex-direction: column; gap: var(--spacing-sm); }
             .stat-value { font-size: 22px; }
-        }
             .app { padding: var(--spacing-md); }
             .tear-edge { margin: var(--spacing-md) calc(-1 * var(--spacing-md)) var(--spacing-lg); }
             .flex-row .field { flex: 1 1 100%; }
@@ -1133,6 +1247,7 @@
                     <button class="btn btn-outline btn-sm" id="newGroupBtn" type="button" data-i18n="new_group_btn">🆕 Новая группа</button>
                 </div>
             </div>
+            <div class="recent-groups" id="recentGroups" hidden></div>
 
             <div class="events-section">
                 <div class="flex-row">
@@ -1161,6 +1276,7 @@
                         </select>
                     </div>
                     <span class="stat-value" id="myExpensesValue">0 ₽</span>
+                    <span class="stat-balance" id="myBalanceValue"></span>
                 </div>
             </div>
 
@@ -1207,10 +1323,11 @@
                         <input type="text" id="expenseDesc" placeholder="За что (еда, такси…)" data-i18n-placeholder="expense_desc_placeholder" />
                     </div>
                     <div class="field-sm">
-                        <input type="number" id="expenseAmount" placeholder="Сумма" min="0" step="any" data-i18n-placeholder="amount_placeholder" />
+                        <input type="text" inputmode="decimal" autocomplete="off" id="expenseAmount" placeholder="Сумма" data-i18n-placeholder="amount_placeholder" />
                     </div>
                     <button class="btn btn-success" id="addExpenseBtn">➕</button>
                 </div>
+                <div class="new-expense-split" id="newExpenseSplit" hidden></div>
                 <div id="expenseList"></div>
             </div>
 
@@ -1221,12 +1338,14 @@
                         <button class="btn-copy" id="copyResultBtn" data-i18n="copy_btn">📋 Копировать</button>
                     </div>
                     <ul class="debt-list" id="debtList"></ul>
+                    <div class="settlements-title" id="settlementsTitle" hidden></div>
+                    <ul class="settlement-list" id="settlementList"></ul>
                 </div>
             </div>
         </div>
     </div>
 
-    <div class="toast" id="toast" data-i18n="copied_toast">Скопировано!</div>
+    <div class="toast" id="toast">Скопировано!</div>
 
     <script>
         (function() {
@@ -1310,7 +1429,15 @@
                     cover_tag_title: 'За него платит',
                     alert_cover_choose: 'Выберите обоих участников',
                     alert_cover_same: 'Выберите двух разных участников',
-                    alert_cover_cycle: 'Получится замкнутый круг: выбранный участник уже платит за этого'
+                    alert_cover_cycle: 'Получится замкнутый круг: выбранный участник уже платит за этого',
+                    my_balance_owed: 'тебе должны',
+                    my_balance_owe: 'ты должен',
+                    my_balance_even: 'ты в расчёте',
+                    settle_btn: 'Перевёл',
+                    settlements_title: 'Уже перевели',
+                    undo_btn: 'Вернуть',
+                    expense_deleted_toast: 'Расход удалён',
+                    recent_groups: 'Недавние'
                 },
                 en: {
                     page_title: 'Chip In — shared expense calculator',
@@ -1390,7 +1517,15 @@
                     cover_tag_title: 'Paid for by',
                     alert_cover_choose: 'Choose both participants',
                     alert_cover_same: 'Choose two different participants',
-                    alert_cover_cycle: 'That would create a loop: the chosen participant already pays for this one'
+                    alert_cover_cycle: 'That would create a loop: the chosen participant already pays for this one',
+                    my_balance_owed: 'you are owed',
+                    my_balance_owe: 'you owe',
+                    my_balance_even: 'you are settled',
+                    settle_btn: 'Paid',
+                    settlements_title: 'Already paid',
+                    undo_btn: 'Undo',
+                    expense_deleted_toast: 'Expense deleted',
+                    recent_groups: 'Recent'
                 }
             };
 
@@ -1418,6 +1553,7 @@
                 localStorage.setItem('lang', lang);
                 applyStaticTranslations();
                 renderAll();
+                renderRecentGroups();
             }
 
             // ====== ВАЛЮТА (общая настройка группы — все участники видят одну валюту) ======
@@ -1429,10 +1565,9 @@
             }
 
             function setCurrency(code) {
-                if (!CURRENCIES[code]) return;
-                currency = code;
+                if (!CURRENCIES[code] || code === currency) return;
+                commit({ type: 'setCurrency', currency: code });
                 document.getElementById('currencySelect').value = currency;
-                saveState();
                 renderAll();
             }
 
@@ -1543,6 +1678,45 @@
                 }
             }
             migrateLegacyLocalStorage();
+            rememberGroup(groupId);
+
+            function rememberGroup(id) {
+                const clean = sanitizeGroupId(id);
+                if (!clean) return;
+                let list = [];
+                try { list = JSON.parse(localStorage.getItem('recentGroups')) || []; } catch (e) { list = []; }
+                list = [{ id: clean }].concat(list.filter(g => g && g.id !== clean)).slice(0, 8);
+                localStorage.setItem('recentGroups', JSON.stringify(list));
+            }
+
+            function goToGroup(clean) {
+                rememberGroup(clean);
+                localStorage.setItem('myGroupId', clean);
+                const url = new URL(window.location.href);
+                url.searchParams.set('g', clean);
+                window.location.href = url.toString();
+            }
+
+            function renderRecentGroups() {
+                const el = document.getElementById('recentGroups');
+                if (!el) return;
+                let list = [];
+                try { list = JSON.parse(localStorage.getItem('recentGroups')) || []; } catch (e) { list = []; }
+                const others = list.filter(g => g && g.id && g.id !== groupId);
+                el.replaceChildren();
+                if (!others.length) { el.hidden = true; return; }
+                el.hidden = false;
+                const label = document.createElement('span');
+                label.textContent = t('recent_groups');
+                el.appendChild(label);
+                others.forEach(g => {
+                    const btn = document.createElement('button');
+                    btn.type = 'button';
+                    btn.textContent = g.id;
+                    btn.addEventListener('click', () => goToGroup(g.id));
+                    el.appendChild(btn);
+                });
+            }
 
             function copyInviteLink() {
                 const url = new URL(window.location.href);
@@ -1563,11 +1737,7 @@
 
             function createNewGroup() {
                 if (!confirm(t('confirm_new_group'))) return;
-                const newId = generateGroupId();
-                localStorage.setItem('myGroupId', newId);
-                const url = new URL(window.location.href);
-                url.searchParams.set('g', newId);
-                window.location.href = url.toString();
+                goToGroup(generateGroupId());
             }
 
             function joinGroupPrompt() {
@@ -1581,16 +1751,20 @@
                 } catch (e) { /* это не ссылка — считаем, что ввели сам код */ }
                 const clean = sanitizeGroupId(candidate);
                 if (!clean) { alert(t('alert_invalid_group_code')); return; }
-                localStorage.setItem('myGroupId', clean);
-                const url = new URL(window.location.href);
-                url.searchParams.set('g', clean);
-                window.location.href = url.toString();
+                goToGroup(clean);
             }
 
             let events = [];
             let activeEventId = null;
             let idCounter = 0;
             let editingExpenseId = null;
+            let pendingOps = [];
+            let flushTimer = null;
+            let flushPromise = null;
+            let flushHoldUntil = 0;
+            let syncedOnce = false;
+            let newSplitEditor = null;
+            let newSplitMembersKey = '';
 
             const eventNameInput = document.getElementById('eventNameInput');
             const addEventBtn = document.getElementById('addEventBtn');
@@ -1624,15 +1798,61 @@
             const coverList = document.getElementById('coverList');
 
             // ====== Вспомогательные функции расчёта ======
+            function selectElementText(el) {
+                const range = document.createRange();
+                range.selectNodeContents(el);
+                const sel = window.getSelection();
+                sel.removeAllRanges();
+                sel.addRange(range);
+            }
+
             function esc(s) {
                 return String(s).replace(/[&<>"']/g, ch => (
                     { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]
                 ));
             }
 
-            function roundMoney(x) { return Math.round(x * 100) / 100; }
+            function sid(id) { return id == null || id === '' ? '' : String(id); }
+            function sameId(a, b) { return sid(a) !== '' && sid(a) === sid(b); }
+            function includesId(list, id) { return (list || []).some(x => sameId(x, id)); }
+            function findById(list, id) { return (list || []).find(x => sameId(x.id, id)) || null; }
 
-            function fmtMoney(x) { return roundMoney(x).toLocaleString(); }
+            function roundMoney(x) { return Math.round((Number(x) || 0) * 100) / 100; }
+
+            function fmtMoney(x) {
+                const n = roundMoney(x);
+                const digits = Math.abs(n - Math.trunc(n)) < 0.001 ? 0 : 2;
+                return n.toLocaleString(lang === 'en' ? 'en-US' : 'ru-RU', {
+                    minimumFractionDigits: digits,
+                    maximumFractionDigits: 2
+                });
+            }
+
+            // «100,50», «1 000» и «1.234,56» читаются как деньги
+            function parseMoney(raw) {
+                if (typeof raw === 'number') return Number.isFinite(raw) ? raw : NaN;
+                if (raw == null) return NaN;
+                let s = String(raw).trim().replace(/[\s\u00a0\u202f]/g, '');
+                if (!s) return NaN;
+                const lastComma = s.lastIndexOf(',');
+                const lastDot = s.lastIndexOf('.');
+                if (lastComma !== -1 && lastDot !== -1) {
+                    if (lastComma > lastDot) s = s.replace(/\./g, '').replace(',', '.');
+                    else s = s.replace(/,/g, '');
+                } else if (lastComma !== -1) {
+                    const parts = s.split(',');
+                    s = parts.length > 2 ? parts.join('') : s.replace(',', '.');
+                }
+                if (!/^[+-]?\d+(\.\d+)?$/.test(s)) return NaN;
+                const n = Number(s);
+                return Number.isFinite(n) ? n : NaN;
+            }
+
+            function moneyInputValue(n) {
+                if (!(n > 0)) return '';
+                const s = String(roundMoney(n));
+                return lang === 'ru' ? s.replace('.', ',') : s;
+            }
 
             // Делит сумму поровну между ids с точностью до копеек (остаток копеек раздаётся первым)
             function distributeEqually(amount, ids) {
@@ -1649,34 +1869,47 @@
                 return res;
             }
 
+            // Приводит доли к сумме расхода, остаток копеек отдаёт самым крупным дробным частям
+            function scaleSharesToAmount(shares, amount) {
+                const ids = Object.keys(shares);
+                const cents = Math.round(amount * 100);
+                const rounded = {};
+                ids.forEach(id => { rounded[id] = Math.round(shares[id] * 100); });
+                const roundedSum = ids.reduce((s, id) => s + rounded[id], 0);
+                if (roundedSum === cents) {
+                    const exact = {};
+                    ids.forEach(id => { exact[id] = rounded[id] / 100; });
+                    return exact;
+                }
+                const sum = ids.reduce((s, id) => s + shares[id], 0);
+                if (!(sum > 0)) return {};
+                const weights = {};
+                ids.forEach(id => { weights[id] = shares[id] / sum; });
+                const raw = {};
+                ids.forEach(id => { raw[id] = Math.floor(weights[id] * cents + 1e-6); });
+                let rem = cents - ids.reduce((s, id) => s + raw[id], 0);
+                const order = ids.slice().sort((a, b) => (weights[b] * cents - raw[b]) - (weights[a] * cents - raw[a]));
+                for (let i = 0; i < order.length && rem > 0; i++, rem--) raw[order[i]] += 1;
+                const out = {};
+                ids.forEach(id => { out[id] = raw[id] / 100; });
+                return out;
+            }
+
             // Доли участников в одном расходе: { memberId: сумма }.
             // Режим «по суммам» — если у расхода есть split; иначе поровну между теми, кого не исключили.
             function getShares(exp, members) {
-                const shares = {};
                 const amount = Number(exp.amount) || 0;
-
                 if (exp.split && typeof exp.split === 'object') {
-                    let sum = 0;
+                    const shares = {};
                     members.forEach(m => {
                         const v = Number(exp.split[m.id]);
-                        if (v > 0) { shares[m.id] = v; sum += v; }
+                        if (v > 0) shares[m.id] = v;
                     });
-                    if (sum > 0) {
-                        // Если разбивка не сходится с суммой (например, удалили участника),
-                        // пропорционально приводим её к сумме расхода — итог остаётся сбалансированным
-                        if (Math.abs(sum - amount) > 0.005) {
-                            Object.keys(shares).forEach(id => { shares[id] = shares[id] * amount / sum; });
-                        }
-                        return shares;
-                    }
+                    if (Object.keys(shares).length) return scaleSharesToAmount(shares, amount);
                 }
-
-                const excluded = exp.excluded || [];
-                const participants = members.filter(m => !excluded.includes(m.id));
-                if (participants.length === 0) return shares;
-                const per = amount / participants.length;
-                participants.forEach(m => { shares[m.id] = per; });
-                return shares;
+                const participants = members.filter(m => !includesId(exp.excluded, m.id));
+                if (!participants.length) return {};
+                return distributeEqually(amount, participants.map(m => m.id));
             }
 
             // Цепочка «кто за кого платит»: [участник, тот кто за него платит, ..., итоговый плательщик]
@@ -1700,59 +1933,285 @@
 
             // Подпись плательщика в итогах: «Влад (+Настя)», если за кого-то платит он
             function groupLabel(root, members) {
-                const covered = members.filter(m => m.id !== root.id && rootOf(m.id, members) === root.id);
+                const covered = members.filter(m => !sameId(m.id, root.id) && sameId(rootOf(m.id, members), root.id));
                 return covered.length
                     ? `${root.name} (+${covered.map(m => m.name).join(', ')})`
                     : root.name;
             }
 
-            function generateId() { return ++idCounter; }
+            function labelById(id, members) {
+                const m = findById(members, id);
+                return m ? groupLabel(m, members) : t('unknown_payer');
+            }
+
+            function generateId() {
+                idCounter += 1;
+                return 'e' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+            }
+
+            function cloneData(v) { return JSON.parse(JSON.stringify(v)); }
 
             function getActiveEvent() {
-                return events.find(e => e.id === activeEventId) || null;
+                return findById(events, activeEventId);
             }
 
             function getExpense(id) {
                 const ev = getActiveEvent();
                 if (!ev) return null;
-                return ev.expenses.find(e => e.id === id) || null;
+                return findById(ev.expenses, id);
             }
 
-            function applyRemoteData(data) {
-                events = (data && data.events) || [];
-                idCounter = (data && data.idCounter) || 0;
-                currency = (data && data.currency && CURRENCIES[data.currency]) ? data.currency : 'RUB';
+            function deleteSplitKey(split, id) {
+                if (!split) return;
+                Object.keys(split).forEach(k => { if (sameId(k, id)) delete split[k]; });
+            }
+
+            function normalizeExpense(exp) {
+                const out = {
+                    id: exp.id,
+                    payer: exp.payer,
+                    description: exp.description || '',
+                    amount: roundMoney(exp.amount),
+                    excluded: Array.isArray(exp.excluded) ? exp.excluded.slice() : []
+                };
+                if (exp.split && typeof exp.split === 'object' && Object.keys(exp.split).length) out.split = exp.split;
+                return out;
+            }
+
+            function eventById(state, id) { return findById(state.events, id); }
+
+            // Одна операция поверх состояния. Повторное применение с тем же id ничего не меняет.
+            function applyOp(state, op) {
+                if (!op || !op.type) return;
+                const ev = op.eventId != null ? eventById(state, op.eventId) : null;
+                switch (op.type) {
+                    case 'createEvent': {
+                        if (!op.event || state.events.some(e => sameId(e.id, op.event.id))) return;
+                        state.events.push({
+                            id: op.event.id,
+                            name: op.event.name,
+                            members: [],
+                            expenses: [],
+                            settlements: []
+                        });
+                        break;
+                    }
+                    case 'renameEvent': {
+                        if (ev && op.name) ev.name = op.name;
+                        break;
+                    }
+                    case 'deleteEvent': {
+                        state.events = state.events.filter(e => !sameId(e.id, op.eventId));
+                        break;
+                    }
+                    case 'addMember': {
+                        if (!ev || !op.member || ev.members.some(m => sameId(m.id, op.member.id))) return;
+                        ev.members.push({ id: op.member.id, name: op.member.name });
+                        break;
+                    }
+                    case 'renameMember': {
+                        const m = ev && findById(ev.members, op.memberId);
+                        if (m && op.name) m.name = op.name;
+                        break;
+                    }
+                    case 'removeMember': {
+                        if (!ev) return;
+                        ev.members = ev.members.filter(m => !sameId(m.id, op.memberId));
+                        ev.expenses = ev.expenses.filter(x => !sameId(x.payer, op.memberId));
+                        ev.expenses.forEach(x => {
+                            if (x.excluded) x.excluded = x.excluded.filter(id => !sameId(id, op.memberId));
+                            deleteSplitKey(x.split, op.memberId);
+                        });
+                        ev.members.forEach(m => { if (sameId(m.coveredBy, op.memberId)) delete m.coveredBy; });
+                        if (ev.settlements) {
+                            ev.settlements = ev.settlements.filter(s => !sameId(s.fromId, op.memberId) && !sameId(s.toId, op.memberId));
+                        }
+                        break;
+                    }
+                    case 'addExpense': {
+                        if (!ev || !op.expense || ev.expenses.some(x => sameId(x.id, op.expense.id))) return;
+                        ev.expenses.push(normalizeExpense(op.expense));
+                        break;
+                    }
+                    case 'updateExpense': {
+                        if (!ev || !op.expense) return;
+                        const idx = ev.expenses.findIndex(x => sameId(x.id, op.expense.id));
+                        if (idx === -1) return;
+                        ev.expenses[idx] = normalizeExpense(op.expense);
+                        break;
+                    }
+                    case 'removeExpense': {
+                        if (!ev) return;
+                        ev.expenses = ev.expenses.filter(x => !sameId(x.id, op.expenseId));
+                        break;
+                    }
+                    case 'setCover': {
+                        const m = ev && findById(ev.members, op.memberId);
+                        if (!m) return;
+                        if (op.payerId) m.coveredBy = op.payerId;
+                        else delete m.coveredBy;
+                        break;
+                    }
+                    case 'setCurrency': {
+                        if (CURRENCIES[op.currency]) state.currency = op.currency;
+                        break;
+                    }
+                    case 'addSettlement': {
+                        if (!ev || !op.settlement) return;
+                        if (!ev.settlements) ev.settlements = [];
+                        if (ev.settlements.some(s => sameId(s.id, op.settlement.id))) return;
+                        ev.settlements.push({
+                            id: op.settlement.id,
+                            fromId: op.settlement.fromId,
+                            toId: op.settlement.toId,
+                            amount: roundMoney(op.settlement.amount)
+                        });
+                        break;
+                    }
+                    case 'removeSettlement': {
+                        if (!ev || !ev.settlements) return;
+                        ev.settlements = ev.settlements.filter(s => !sameId(s.id, op.settlementId));
+                        break;
+                    }
+                }
+            }
+
+            function canonState(list, cur) {
+                return JSON.stringify({
+                    currency: cur,
+                    events: (list || []).map(ev => ({
+                        id: sid(ev.id),
+                        name: ev.name,
+                        members: (ev.members || []).map(m => ({
+                            id: sid(m.id),
+                            name: m.name,
+                            coveredBy: m.coveredBy ? sid(m.coveredBy) : ''
+                        })),
+                        expenses: (ev.expenses || []).map(e => ({
+                            id: sid(e.id),
+                            payer: sid(e.payer),
+                            description: e.description || '',
+                            amount: roundMoney(e.amount),
+                            excluded: (e.excluded || []).map(sid).sort(),
+                            split: e.split ? Object.keys(e.split).sort().map(k => sid(k) + ':' + roundMoney(e.split[k])).join(',') : ''
+                        })),
+                        settlements: (ev.settlements || []).map(s => ({
+                            id: sid(s.id),
+                            fromId: sid(s.fromId),
+                            toId: sid(s.toId),
+                            amount: roundMoney(s.amount)
+                        }))
+                    }))
+                });
+            }
+
+            function emptyRemote() { return { events: [], idCounter: 0, currency: 'RUB', rev: 0 }; }
+
+            function adoptState(data, rebasePending) {
+                const src = data || emptyRemote();
+                const next = {
+                    events: cloneData(src.events || []),
+                    idCounter: src.idCounter || 0,
+                    currency: (src.currency && CURRENCIES[src.currency]) ? src.currency : 'RUB'
+                };
+                if (rebasePending) pendingOps.forEach(op => applyOp(next, op));
+                const changed = canonState(next.events, next.currency) !== canonState(events, currency);
+                events = next.events;
+                idCounter = Math.max(idCounter, next.idCounter);
+                currency = next.currency;
                 const currencySelectEl = document.getElementById('currencySelect');
                 if (currencySelectEl) currencySelectEl.value = currency;
-                if (activeEventId && !events.some(e => e.id === activeEventId)) {
+                if (activeEventId && !findById(events, activeEventId)) {
                     activeEventId = events.length > 0 ? events[0].id : null;
                 }
-                renderAll();
+                if (changed || !syncedOnce) {
+                    syncedOnce = true;
+                    if (changed) persistLocal();
+                    renderAll();
+                }
             }
 
-            function saveState() {
-                // Какое событие сейчас открыто — личная настройка этого браузера, не шарим её
-                if (activeEventId) {
-                    localStorage.setItem(localActiveEventKey(), activeEventId);
-                } else {
-                    localStorage.removeItem(localActiveEventKey());
-                }
+            function pendingKey() { return 'pendingOps_' + groupId; }
 
-                // Локальную копию сохраняем ВСЕГДА — это подстраховка на случай,
-                // если облако недоступно (нет сети, не настроены правила доступа и т.п.)
+            function loadPending() {
+                try {
+                    const raw = localStorage.getItem(pendingKey());
+                    const list = raw ? JSON.parse(raw) : [];
+                    return Array.isArray(list) ? list : [];
+                } catch (e) { return []; }
+            }
+
+            function persistLocal() {
+                if (activeEventId) localStorage.setItem(localActiveEventKey(), sid(activeEventId));
+                else localStorage.removeItem(localActiveEventKey());
                 localStorage.setItem(localDataKey(), JSON.stringify({ events, idCounter, currency }));
+                localStorage.setItem(pendingKey(), JSON.stringify(pendingOps));
+            }
 
+            function commit(op) {
+                if (!op.opId) op.opId = generateId();
+                const box = { events, idCounter, currency };
+                applyOp(box, op);
+                events = box.events;
+                idCounter = box.idCounter;
+                currency = box.currency;
                 if (FIREBASE_ENABLED && db) {
-                    db.doc(groupDocPath).set({ events, idCounter, currency }).catch(err => {
-                        console.error('Firebase save error:', err);
-                        showToast(t('toast_save_error') + ' (' + (err.code || err.message) + ')');
-                    });
+                    pendingOps.push(op);
+                    persistLocal();
+                    scheduleFlush();
+                } else {
+                    persistLocal();
                 }
+            }
+
+            function scheduleFlush() {
+                if (!FIREBASE_ENABLED || !db || !pendingOps.length) return;
+                const wait = flushHoldUntil - Date.now();
+                clearTimeout(flushTimer);
+                flushTimer = setTimeout(flushPending, Math.max(250, wait));
+            }
+
+            function flushPending() {
+                if (!FIREBASE_ENABLED || !db || !pendingOps.length) return;
+                if (flushPromise) {
+                    flushPromise.then(() => { if (pendingOps.length) scheduleFlush(); });
+                    return;
+                }
+                const batch = pendingOps.slice();
+                const ref = db.doc(groupDocPath);
+                flushPromise = db.runTransaction(tx => {
+                    return tx.get(ref).then(snap => {
+                        const remote = snap.exists ? snap.data() : emptyRemote();
+                        const next = {
+                            events: cloneData(remote.events || []),
+                            idCounter: remote.idCounter || 0,
+                            currency: (remote.currency && CURRENCIES[remote.currency]) ? remote.currency : 'RUB'
+                        };
+                        batch.forEach(op => applyOp(next, op));
+                        tx.set(ref, JSON.parse(JSON.stringify({
+                            events: next.events,
+                            idCounter: Math.max(next.idCounter, idCounter),
+                            currency: next.currency,
+                            rev: (remote.rev || 0) + 1
+                        })));
+                    });
+                }).then(() => {
+                    const done = new Set(batch.map(op => op.opId));
+                    pendingOps = pendingOps.filter(op => !done.has(op.opId));
+                    persistLocal();
+                    if (pendingOps.length) scheduleFlush();
+                }).catch(err => {
+                    console.error('Firebase save error:', err);
+                    flushHoldUntil = Date.now() + 5000;
+                    showToast(t('toast_save_error') + ' (' + (err.code || err.message) + ')');
+                }).finally(() => {
+                    flushPromise = null;
+                });
             }
 
             function loadLocalActiveEvent() {
                 const saved = localStorage.getItem(localActiveEventKey());
-                activeEventId = saved ? parseInt(saved) : null;
+                activeEventId = saved || null;
             }
 
             function loadLocalBackup() {
@@ -1766,22 +2225,23 @@
 
             function startSync() {
                 loadLocalActiveEvent();
+                pendingOps = loadPending();
+                // Локальная копия уже содержит несохранённые правки — повторно их не накатываем
+                adoptState(loadLocalBackup(), false);
+                window.addEventListener('online', () => { flushHoldUntil = 0; scheduleFlush(); });
 
                 if (FIREBASE_ENABLED && db) {
                     db.doc(groupDocPath).onSnapshot(
                         docSnap => {
-                            applyRemoteData(docSnap.exists ? docSnap.data() : { events: [], idCounter: 0 });
+                            adoptState(docSnap.exists ? docSnap.data() : emptyRemote(), true);
+                            scheduleFlush();
                         },
                         err => {
                             console.error('Firebase sync error:', err);
                             showToast(t('toast_sync_error') + ' (' + (err.code || err.message) + ') ' + t('toast_sync_error_suffix'));
-                            // Если облако недоступно, показываем то, что сохранено локально в этом браузере,
-                            // а не пустой экран
-                            applyRemoteData(loadLocalBackup());
                         }
                     );
                 } else {
-                    applyRemoteData(loadLocalBackup());
                     showToast(t('toast_local_mode'));
                 }
             }
@@ -1797,7 +2257,7 @@
                 }
                 events.forEach(ev => {
                     const chip = document.createElement('span');
-                    chip.className = 'event-chip' + (ev.id === activeEventId ? ' active' : '');
+                    chip.className = 'event-chip' + (sameId(ev.id, activeEventId) ? ' active' : '');
                     const nameSpan = document.createElement('span');
                     nameSpan.className = 'event-name';
                     nameSpan.textContent = ev.name;
@@ -1806,18 +2266,17 @@
                     nameSpan.addEventListener('dblclick', (e) => {
                         e.stopPropagation();
                         nameSpan.focus();
-                        document.execCommand('selectAll', false, null);
+                        selectElementText(nameSpan);
                     });
                     nameSpan.addEventListener('blur', () => {
                         const newName = nameSpan.textContent.trim() || t('default_event_name');
                         if (newName !== ev.name) {
-                            if (events.some(e => e.id !== ev.id && e.name.toLowerCase() === newName.toLowerCase())) {
+                            if (events.some(e => !sameId(e.id, ev.id) && e.name.toLowerCase() === newName.toLowerCase())) {
                                 alert(t('alert_event_exists'));
                                 nameSpan.textContent = ev.name;
                                 return;
                             }
-                            ev.name = newName;
-                            saveState();
+                            commit({ type: 'renameEvent', eventId: ev.id, name: newName });
                             renderAll();
                         }
                     });
@@ -1850,12 +2309,12 @@
             }
 
             function setActiveEvent(id) {
-                if (activeEventId === id) return;
-                const ev = events.find(e => e.id === id);
+                if (sameId(activeEventId, id)) return;
+                const ev = findById(events, id);
                 if (!ev) return;
-                activeEventId = id;
-                cancelEditing();
-                saveState();
+                activeEventId = ev.id;
+                editingExpenseId = null;
+                persistLocal();
                 renderAll();
             }
 
@@ -1866,28 +2325,22 @@
                     alert(t('alert_event_exists'));
                     return;
                 }
-                const newEvent = {
-                    id: generateId(),
-                    name: name,
-                    members: [],
-                    expenses: []
-                };
-                events.push(newEvent);
-                activeEventId = newEvent.id;
+                const id = generateId();
+                activeEventId = id;
+                editingExpenseId = null;
                 eventNameInput.value = '';
-                cancelEditing();
-                saveState();
+                commit({ type: 'createEvent', event: { id, name } });
                 renderAll();
             }
 
             function deleteEvent(id) {
                 if (!confirm(t('confirm_delete_event'))) return;
-                events = events.filter(e => e.id !== id);
-                if (activeEventId === id) {
-                    activeEventId = events.length > 0 ? events[0].id : null;
+                if (sameId(activeEventId, id)) {
+                    const rest = events.filter(e => !sameId(e.id, id));
+                    activeEventId = rest.length ? rest[0].id : null;
                 }
-                cancelEditing();
-                saveState();
+                editingExpenseId = null;
+                commit({ type: 'deleteEvent', eventId: id });
                 renderAll();
             }
 
@@ -1906,18 +2359,17 @@
                         nameSpan.addEventListener('dblclick', (e) => {
                             e.stopPropagation();
                             nameSpan.focus();
-                            document.execCommand('selectAll', false, null);
+                            selectElementText(nameSpan);
                         });
                         nameSpan.addEventListener('blur', () => {
                             const newName = nameSpan.textContent.trim() || t('default_name');
                             if (newName !== m.name) {
-                                if (ev.members.some(mm => mm.id !== m.id && mm.name.toLowerCase() === newName.toLowerCase())) {
+                                if (ev.members.some(mm => !sameId(mm.id, m.id) && mm.name.toLowerCase() === newName.toLowerCase())) {
                                     alert(t('alert_member_name_exists'));
                                     nameSpan.textContent = m.name;
                                     return;
                                 }
-                                m.name = newName;
-                                saveState();
+                                commit({ type: 'renameMember', eventId: ev.id, memberId: m.id, name: newName });
                                 renderAll();
                             }
                         });
@@ -1932,7 +2384,7 @@
                             }
                         });
                         chip.appendChild(nameSpan);
-                        const coverer = m.coveredBy ? ev.members.find(x => x.id === m.coveredBy) : null;
+                        const coverer = m.coveredBy ? findById(ev.members, m.coveredBy) : null;
                         if (coverer) {
                             const tag = document.createElement('span');
                             tag.className = 'cover-tag';
@@ -1983,12 +2435,12 @@
                         sel.appendChild(opt);
                     });
                 });
-                if (prevMember && ev.members.some(m => m.id == prevMember)) coverMemberSelect.value = prevMember;
-                if (prevPayer && ev.members.some(m => m.id == prevPayer)) coverPayerSelect.value = prevPayer;
+                if (prevMember && findById(ev.members, prevMember)) coverMemberSelect.value = prevMember;
+                if (prevPayer && findById(ev.members, prevPayer)) coverPayerSelect.value = prevPayer;
 
                 coverList.innerHTML = '';
                 ev.members.forEach(m => {
-                    const payer = m.coveredBy ? ev.members.find(x => x.id === m.coveredBy) : null;
+                    const payer = m.coveredBy ? findById(ev.members, m.coveredBy) : null;
                     if (!payer) return;
                     const chip = document.createElement('span');
                     chip.className = 'chip';
@@ -2010,29 +2462,204 @@
             function addCover() {
                 const ev = getActiveEvent();
                 if (!ev) return;
-                const memberId = parseInt(coverMemberSelect.value);
-                const payerId = parseInt(coverPayerSelect.value);
+                const memberId = coverMemberSelect.value;
+                const payerId = coverPayerSelect.value;
                 if (!memberId || !payerId) { alert(t('alert_cover_choose')); return; }
-                if (memberId === payerId) { alert(t('alert_cover_same')); return; }
-                // Нельзя замыкать круг: если плательщик сам (через цепочку) зависит от этого участника
-                if (coverChain(payerId, ev.members).includes(memberId)) { alert(t('alert_cover_cycle')); return; }
-                const member = ev.members.find(m => m.id === memberId);
-                if (!member) return;
-                member.coveredBy = payerId;
+                if (sameId(memberId, payerId)) { alert(t('alert_cover_same')); return; }
+                if (coverChain(payerId, ev.members).some(id => sameId(id, memberId))) { alert(t('alert_cover_cycle')); return; }
+                if (!findById(ev.members, memberId)) return;
+                commit({ type: 'setCover', eventId: ev.id, memberId, payerId });
                 coverMemberSelect.value = '';
                 coverPayerSelect.value = '';
-                saveState();
                 renderAll();
             }
 
             function removeCover(memberId) {
                 const ev = getActiveEvent();
-                if (!ev) return;
-                const member = ev.members.find(m => m.id === memberId);
-                if (!member) return;
-                delete member.coveredBy;
-                saveState();
+                if (!ev || !findById(ev.members, memberId)) return;
+                commit({ type: 'setCover', eventId: ev.id, memberId, payerId: null });
                 renderAll();
+            }
+
+            function createSplitEditor(members, initial, getAmount) {
+                const root = document.createElement('div');
+                root.className = 'split-editor';
+                const startMode = initial && initial.mode === 'custom' ? 'custom' : 'equal';
+                let splitTouched = startMode === 'custom';
+
+                const modeRow = document.createElement('div');
+                modeRow.className = 'split-mode';
+                const equalModeBtn = document.createElement('button');
+                equalModeBtn.type = 'button';
+                equalModeBtn.className = 'split-mode-btn';
+                equalModeBtn.textContent = t('split_equal_mode');
+                const customModeBtn = document.createElement('button');
+                customModeBtn.type = 'button';
+                customModeBtn.className = 'split-mode-btn';
+                customModeBtn.textContent = t('split_custom_mode');
+                modeRow.appendChild(equalModeBtn);
+                modeRow.appendChild(customModeBtn);
+                root.appendChild(modeRow);
+
+                const equalPanel = document.createElement('div');
+                equalPanel.className = 'equal-panel';
+                const exclHint = document.createElement('div');
+                exclHint.className = 'exclude-hint';
+                exclHint.textContent = t('exclude_hint');
+                equalPanel.appendChild(exclHint);
+                const exclContainer = document.createElement('div');
+                exclContainer.className = 'exclude-checkboxes';
+                const exclCheckboxes = [];
+                members.forEach(m => {
+                    const label = document.createElement('label');
+                    const cb = document.createElement('input');
+                    cb.type = 'checkbox';
+                    cb.value = sid(m.id);
+                    if (includesId(initial && initial.excluded, m.id)) cb.checked = true;
+                    exclCheckboxes.push(cb);
+                    label.appendChild(cb);
+                    label.appendChild(document.createTextNode(' ' + m.name));
+                    exclContainer.appendChild(label);
+                });
+                equalPanel.appendChild(exclContainer);
+                root.appendChild(equalPanel);
+
+                const customPanel = document.createElement('div');
+                customPanel.className = 'split-panel';
+                const splitHint = document.createElement('div');
+                splitHint.className = 'exclude-hint';
+                splitHint.textContent = t('split_hint');
+                customPanel.appendChild(splitHint);
+
+                const equalIds = members.filter(m => !includesId(initial && initial.excluded, m.id)).map(m => m.id);
+                const prefill = (initial && initial.split) ? initial.split : distributeEqually(parseMoney(getAmount()) || 0, equalIds.length ? equalIds : members.map(m => m.id));
+                const splitInputs = [];
+                members.forEach(m => {
+                    const row = document.createElement('div');
+                    row.className = 'split-row';
+                    const nameEl = document.createElement('span');
+                    nameEl.className = 'split-name';
+                    nameEl.textContent = m.name;
+                    const inp = document.createElement('input');
+                    inp.type = 'text';
+                    inp.inputMode = 'decimal';
+                    inp.autocomplete = 'off';
+                    inp.placeholder = '0';
+                    inp.dataset.memberId = sid(m.id);
+                    const raw = initial && initial.rawValues ? initial.rawValues[sid(m.id)] : null;
+                    if (raw != null && raw !== '') inp.value = raw;
+                    else {
+                        const v = Number(prefill[m.id]);
+                        inp.value = v > 0 ? moneyInputValue(v) : '';
+                    }
+                    inp.addEventListener('input', () => { splitTouched = true; updateSplitSummary(); });
+                    splitInputs.push(inp);
+                    row.appendChild(nameEl);
+                    row.appendChild(inp);
+                    customPanel.appendChild(row);
+                });
+
+                const splitTools = document.createElement('div');
+                splitTools.className = 'split-tools';
+                const fillEqualBtn = document.createElement('button');
+                fillEqualBtn.type = 'button';
+                fillEqualBtn.className = 'btn btn-outline btn-sm';
+                fillEqualBtn.textContent = t('split_fill_equal');
+                const splitSummary = document.createElement('span');
+                splitSummary.className = 'split-summary';
+                splitTools.appendChild(fillEqualBtn);
+                splitTools.appendChild(splitSummary);
+                customPanel.appendChild(splitTools);
+                root.appendChild(customPanel);
+
+                function updateSplitSummary() {
+                    const total = parseMoney(getAmount()) || 0;
+                    const sum = roundMoney(splitInputs.reduce((s, inp) => {
+                        const v = parseMoney(inp.value);
+                        return s + (v > 0 ? v : 0);
+                    }, 0));
+                    const diff = roundMoney(total - sum);
+                    const cur = curSymbol();
+                    let text = `${fmtMoney(sum)} / ${fmtMoney(total)} ${cur}`;
+                    if (Math.abs(diff) < 0.005) {
+                        text = '✓ ' + text;
+                        splitSummary.classList.add('ok');
+                    } else {
+                        text += ` · ${diff > 0 ? t('split_left') : t('split_over')} ${fmtMoney(Math.abs(diff))} ${cur}`;
+                        splitSummary.classList.remove('ok');
+                    }
+                    splitSummary.textContent = text;
+                }
+
+                function fillEqual(silent) {
+                    const total = parseMoney(getAmount());
+                    if (isNaN(total) || total <= 0) {
+                        if (!silent) alert(t('alert_enter_amount'));
+                        return;
+                    }
+                    const excludedIds = exclCheckboxes.filter(cb => cb.checked).map(cb => cb.value);
+                    let ids = members.filter(m => !includesId(excludedIds, m.id)).map(m => m.id);
+                    if (!ids.length) ids = members.map(m => m.id);
+                    const dist = distributeEqually(total, ids);
+                    splitInputs.forEach(inp => {
+                        const member = members.find(m => sameId(m.id, inp.dataset.memberId));
+                        const v = member ? dist[member.id] : 0;
+                        inp.value = v > 0 ? moneyInputValue(v) : '';
+                    });
+                    updateSplitSummary();
+                }
+
+                function setMode(mode) {
+                    root.dataset.mode = mode;
+                    equalModeBtn.classList.toggle('active', mode === 'equal');
+                    customModeBtn.classList.toggle('active', mode === 'custom');
+                    equalPanel.style.display = mode === 'equal' ? '' : 'none';
+                    customPanel.style.display = mode === 'custom' ? 'flex' : 'none';
+                    if (mode === 'custom') {
+                        if (!splitTouched) fillEqual(true);
+                        updateSplitSummary();
+                    }
+                }
+
+                equalModeBtn.addEventListener('click', (evt) => { evt.stopPropagation(); setMode('equal'); });
+                customModeBtn.addEventListener('click', (evt) => { evt.stopPropagation(); setMode('custom'); });
+                fillEqualBtn.addEventListener('click', (evt) => {
+                    evt.stopPropagation();
+                    fillEqual(false);
+                    splitTouched = true;
+                });
+                setMode(startMode);
+
+                return {
+                    root,
+                    refresh: updateSplitSummary,
+                    draft() {
+                        return {
+                            mode: root.dataset.mode,
+                            excluded: exclCheckboxes.filter(cb => cb.checked).map(cb => cb.value),
+                            rawValues: Object.fromEntries(splitInputs.map(inp => [inp.dataset.memberId, inp.value]))
+                        };
+                    },
+                    collect() {
+                        const excluded = exclCheckboxes.filter(cb => cb.checked).map(cb => cb.value);
+                        if (root.dataset.mode !== 'custom') return { ok: true, excluded, split: null };
+                        const amount = parseMoney(getAmount());
+                        const split = {};
+                        let sum = 0;
+                        splitInputs.forEach(inp => {
+                            const v = roundMoney(parseMoney(inp.value));
+                            if (v > 0) {
+                                split[inp.dataset.memberId] = v;
+                                sum = roundMoney(sum + v);
+                            }
+                        });
+                        if (!Object.keys(split).length) return { ok: false, message: t('alert_split_empty') };
+                        if (isNaN(amount) || Math.abs(sum - amount) > 0.01) {
+                            return { ok: false, message: t('alert_split_mismatch') + ': ' + fmtMoney(sum) + ' / ' + fmtMoney(isNaN(amount) ? 0 : amount) + ' ' + curSymbol() };
+                        }
+                        return { ok: true, excluded, split };
+                    }
+                };
             }
 
             function renderExpenses() {
@@ -2043,18 +2670,18 @@
                     expenseList.innerHTML = '<div class="empty-msg">' + t('select_event_placeholder') + '</div>';
                     return;
                 }
-                if (ev.expenses.length === 0) {
+                if (!ev.expenses || ev.expenses.length === 0) {
                     expenseList.innerHTML = '<div class="empty-msg">' + t('no_expenses_yet') + '</div>';
                 } else {
                     ev.expenses.forEach(e => {
                         const div = document.createElement('div');
-                        div.className = 'expense-item' + (e.id === editingExpenseId ? ' editing' : '');
+                        div.className = 'expense-item' + (sameId(e.id, editingExpenseId) ? ' editing' : '');
                         div.dataset.id = e.id;
 
                         // Display mode
                         const displayMode = document.createElement('div');
                         displayMode.className = 'display-mode';
-                        const payerName = ev.members.find(m => m.id === e.payer)?.name || t('unknown_payer');
+                        const payerName = (findById(ev.members, e.payer) || {}).name || t('unknown_payer');
                         const isCustomSplit = !!(e.split && typeof e.split === 'object');
                         let noteHtml = '';
                         let detailsHtml = '';
@@ -2068,7 +2695,7 @@
                             if (parts.length) detailsHtml = `<div class="split-details">${parts.join('')}</div>`;
                         } else if (e.excluded && e.excluded.length > 0) {
                             const excludedNames = e.excluded.map(id => {
-                                const m = ev.members.find(mm => mm.id === id);
+                                const m = findById(ev.members, id);
                                 return m ? m.name : '?';
                             });
                             noteHtml = `<span class="excluded-info">(${esc(t('excluded_prefix'))}: ${esc(excludedNames.join(', '))})</span>`;
@@ -2104,9 +2731,9 @@
                         payerSelectEdit.id = 'edit-payer-' + e.id;
                         ev.members.forEach(m => {
                             const opt = document.createElement('option');
-                            opt.value = m.id;
+                            opt.value = sid(m.id);
                             opt.textContent = m.name;
-                            if (m.id === e.payer) opt.selected = true;
+                            if (sameId(m.id, e.payer)) opt.selected = true;
                             payerSelectEdit.appendChild(opt);
                         });
                         payerField.appendChild(payerSelectEdit);
@@ -2124,163 +2751,24 @@
                         const amountField = document.createElement('div');
                         amountField.className = 'field-sm';
                         const amountInput = document.createElement('input');
-                        amountInput.type = 'number';
-                        amountInput.value = e.amount || '';
+                        amountInput.type = 'text';
+                        amountInput.inputMode = 'decimal';
+                        amountInput.autocomplete = 'off';
+                        amountInput.value = e.amount ? moneyInputValue(Number(e.amount)) : '';
                         amountInput.placeholder = t('amount_placeholder');
-                        amountInput.min = '0';
-                        amountInput.step = 'any';
                         amountField.appendChild(amountInput);
                         editRow.appendChild(amountField);
 
                         editMode.appendChild(editRow);
 
-                        // Режим разбивки: поровну (галочки «исключить») или вручную по суммам
-                        editMode.dataset.mode = isCustomSplit ? 'custom' : 'equal';
-
-                        const modeRow = document.createElement('div');
-                        modeRow.className = 'split-mode';
-                        const equalModeBtn = document.createElement('button');
-                        equalModeBtn.type = 'button';
-                        equalModeBtn.className = 'split-mode-btn';
-                        equalModeBtn.textContent = t('split_equal_mode');
-                        const customModeBtn = document.createElement('button');
-                        customModeBtn.type = 'button';
-                        customModeBtn.className = 'split-mode-btn';
-                        customModeBtn.textContent = t('split_custom_mode');
-                        modeRow.appendChild(equalModeBtn);
-                        modeRow.appendChild(customModeBtn);
-                        editMode.appendChild(modeRow);
-
-                        // --- Панель «поровну»: галочки исключения ---
-                        const equalPanel = document.createElement('div');
-                        equalPanel.className = 'equal-panel';
-
-                        const exclHint = document.createElement('div');
-                        exclHint.className = 'exclude-hint';
-                        exclHint.textContent = t('exclude_hint');
-                        equalPanel.appendChild(exclHint);
-
-                        const exclContainer = document.createElement('div');
-                        exclContainer.className = 'exclude-checkboxes';
-                        const exclCheckboxes = [];
-                        ev.members.forEach(m => {
-                            const label = document.createElement('label');
-                            const cb = document.createElement('input');
-                            cb.type = 'checkbox';
-                            cb.value = m.id;
-                            if (e.excluded && e.excluded.includes(m.id)) cb.checked = true;
-                            exclCheckboxes.push(cb);
-                            label.appendChild(cb);
-                            label.appendChild(document.createTextNode(' ' + m.name));
-                            exclContainer.appendChild(label);
-                        });
-                        equalPanel.appendChild(exclContainer);
-                        editMode.appendChild(equalPanel);
-
-                        // --- Панель «по суммам»: сколько потратил каждый ---
-                        const customPanel = document.createElement('div');
-                        customPanel.className = 'split-panel';
-
-                        const splitHint = document.createElement('div');
-                        splitHint.className = 'exclude-hint';
-                        splitHint.textContent = t('split_hint');
-                        customPanel.appendChild(splitHint);
-
-                        // Стартовые значения: сохранённая разбивка или текущее «поровну»
-                        const equalIds = ev.members.filter(m => !(e.excluded || []).includes(m.id)).map(m => m.id);
-                        const prefill = isCustomSplit ? e.split : distributeEqually(Number(e.amount) || 0, equalIds);
-                        let splitTouched = isCustomSplit;
-
-                        const splitInputs = [];
-                        ev.members.forEach(m => {
-                            const row = document.createElement('div');
-                            row.className = 'split-row';
-                            const nameEl = document.createElement('span');
-                            nameEl.className = 'split-name';
-                            nameEl.textContent = m.name;
-                            const inp = document.createElement('input');
-                            inp.type = 'number';
-                            inp.min = '0';
-                            inp.step = 'any';
-                            inp.placeholder = '0';
-                            inp.dataset.memberId = m.id;
-                            inp.value = prefill[m.id] > 0 ? prefill[m.id] : '';
-                            inp.addEventListener('input', () => { splitTouched = true; updateSplitSummary(); });
-                            splitInputs.push(inp);
-                            row.appendChild(nameEl);
-                            row.appendChild(inp);
-                            customPanel.appendChild(row);
-                        });
-
-                        const splitTools = document.createElement('div');
-                        splitTools.className = 'split-tools';
-                        const fillEqualBtn = document.createElement('button');
-                        fillEqualBtn.type = 'button';
-                        fillEqualBtn.className = 'btn btn-outline btn-sm';
-                        fillEqualBtn.textContent = t('split_fill_equal');
-                        const splitSummary = document.createElement('span');
-                        splitSummary.className = 'split-summary';
-                        splitTools.appendChild(fillEqualBtn);
-                        splitTools.appendChild(splitSummary);
-                        customPanel.appendChild(splitTools);
-                        editMode.appendChild(customPanel);
-
-                        function updateSplitSummary() {
-                            const total = parseFloat(amountInput.value) || 0;
-                            const sum = splitInputs.reduce((s, inp) => s + (parseFloat(inp.value) > 0 ? parseFloat(inp.value) : 0), 0);
-                            const diff = roundMoney(total - sum);
-                            const cur = curSymbol();
-                            let text = `${fmtMoney(sum)} / ${fmtMoney(total)} ${cur}`;
-                            if (Math.abs(diff) < 0.005) {
-                                text = '✓ ' + text;
-                                splitSummary.classList.add('ok');
-                            } else {
-                                text += ` · ${diff > 0 ? t('split_left') : t('split_over')} ${fmtMoney(Math.abs(diff))} ${cur}`;
-                                splitSummary.classList.remove('ok');
-                            }
-                            splitSummary.textContent = text;
-                        }
-
-                        // Заполняет суммы поровну между теми, кого не отметили галочкой «исключить»
-                        function fillEqual(silent) {
-                            const total = parseFloat(amountInput.value);
-                            if (isNaN(total) || total <= 0) {
-                                if (!silent) alert(t('alert_enter_amount'));
-                                return;
-                            }
-                            const excludedIds = exclCheckboxes.filter(cb => cb.checked).map(cb => parseInt(cb.value));
-                            let ids = ev.members.filter(m => !excludedIds.includes(m.id)).map(m => m.id);
-                            if (ids.length === 0) ids = ev.members.map(m => m.id);
-                            const dist = distributeEqually(total, ids);
-                            splitInputs.forEach(inp => {
-                                const v = dist[inp.dataset.memberId];
-                                inp.value = v > 0 ? v : '';
-                            });
-                            updateSplitSummary();
-                        }
-
-                        function setMode(mode) {
-                            editMode.dataset.mode = mode;
-                            equalModeBtn.classList.toggle('active', mode === 'equal');
-                            customModeBtn.classList.toggle('active', mode === 'custom');
-                            equalPanel.style.display = mode === 'equal' ? '' : 'none';
-                            customPanel.style.display = mode === 'custom' ? 'flex' : 'none';
-                            if (mode === 'custom') {
-                                // Если суммы ещё не правили руками — подтягиваем актуальное «поровну»
-                                if (!splitTouched) fillEqual(true);
-                                updateSplitSummary();
-                            }
-                        }
-
-                        equalModeBtn.addEventListener('click', (evt) => { evt.stopPropagation(); setMode('equal'); });
-                        customModeBtn.addEventListener('click', (evt) => { evt.stopPropagation(); setMode('custom'); });
-                        fillEqualBtn.addEventListener('click', (evt) => {
-                            evt.stopPropagation();
-                            fillEqual(false);
-                            splitTouched = true;
-                        });
-                        amountInput.addEventListener('input', updateSplitSummary);
-                        setMode(isCustomSplit ? 'custom' : 'equal');
+                        const editor = createSplitEditor(ev.members, {
+                            mode: isCustomSplit ? 'custom' : 'equal',
+                            excluded: e.excluded || [],
+                            split: isCustomSplit ? e.split : null
+                        }, () => amountInput.value);
+                        editMode.appendChild(editor.root);
+                        editMode._editor = editor;
+                        amountInput.addEventListener('input', () => editor.refresh());
 
                         // Actions
                         const actions = document.createElement('div');
@@ -2314,7 +2802,7 @@
                         expenseList.appendChild(div);
                     });
                 }
-                expenseCount.textContent = ev.expenses.length;
+                expenseCount.textContent = (ev.expenses || []).length;
             }
 
             function updatePayerSelect() {
@@ -2324,12 +2812,15 @@
                 if (ev) {
                     ev.members.forEach(m => {
                         const opt = document.createElement('option');
-                        opt.value = m.id;
+                        opt.value = sid(m.id);
                         opt.textContent = m.name;
                         payerSelect.appendChild(opt);
                     });
-                    if (current && ev.members.some(m => m.id == current)) {
+                    if (current && findById(ev.members, current)) {
                         payerSelect.value = current;
+                    } else {
+                        const me = getCurrentMemberId();
+                        if (me && findById(ev.members, me)) payerSelect.value = sid(me);
                     }
                 }
             }
@@ -2344,7 +2835,7 @@
                 const key = getCurrentMemberStorageKey();
                 if (!key) return null;
                 const saved = localStorage.getItem(key);
-                return saved ? parseInt(saved) : null;
+                return saved || null;
             }
 
             function setCurrentMemberId(id) {
@@ -2363,13 +2854,13 @@
                 if (ev) {
                     ev.members.forEach(m => {
                         const opt = document.createElement('option');
-                        opt.value = m.id;
+                        opt.value = sid(m.id);
                         opt.textContent = m.name;
                         currentMemberSelect.appendChild(opt);
                     });
                     const savedId = getCurrentMemberId();
-                    if (savedId && ev.members.some(m => m.id === savedId)) {
-                        currentMemberSelect.value = savedId;
+                    if (savedId && findById(ev.members, savedId)) {
+                        currentMemberSelect.value = sid(savedId);
                     } else {
                         currentMemberSelect.value = '';
                     }
@@ -2386,29 +2877,30 @@
 
             function animateNumberTo(el, target, suffix) {
                 suffix = suffix || '';
-                const from = animatedValues.has(el) ? animatedValues.get(el) : target;
-                if (from === target) {
-                    el.textContent = target.toLocaleString() + suffix;
-                    animatedValues.set(el, target);
+                const to = roundMoney(target);
+                const from = animatedValues.has(el) ? animatedValues.get(el) : to;
+                if (from === to) {
+                    el.textContent = fmtMoney(to) + suffix;
+                    animatedValues.set(el, to);
                     return;
                 }
 
                 if (el._animFrame) cancelAnimationFrame(el._animFrame);
 
-                const duration = Math.min(900, Math.max(350, Math.abs(target - from) * 2));
+                const duration = Math.min(900, Math.max(350, Math.abs(to - from) * 2));
                 const startTime = performance.now();
 
                 function step(now) {
                     const elapsed = now - startTime;
-                    const t = Math.min(1, elapsed / duration);
-                    const eased = easeOutCubic(t);
-                    const current = Math.round(from + (target - from) * eased);
-                    el.textContent = current.toLocaleString() + suffix;
-                    if (t < 1) {
+                    const progress = Math.min(1, elapsed / duration);
+                    const eased = easeOutCubic(progress);
+                    const current = roundMoney(from + (to - from) * eased);
+                    el.textContent = fmtMoney(current) + suffix;
+                    if (progress < 1) {
                         el._animFrame = requestAnimationFrame(step);
                     } else {
-                        el.textContent = target.toLocaleString() + suffix;
-                        animatedValues.set(el, target);
+                        el.textContent = fmtMoney(to) + suffix;
+                        animatedValues.set(el, to);
                         el._animFrame = null;
                     }
                 }
@@ -2421,15 +2913,14 @@
                     animateNumberTo(totalExpensesValue, 0, ' ' + curSymbol());
                     myExpensesValue.textContent = '0 ' + curSymbol();
                     animatedValues.delete(myExpensesValue);
+                    updateMyBalance();
                     return;
                 }
-                const total = ev.expenses.reduce((sum, e) => sum + e.amount, 0);
+                const total = roundMoney(ev.expenses.reduce((sum, e) => sum + Number(e.amount || 0), 0));
                 animateNumberTo(totalExpensesValue, total, ' ' + curSymbol());
 
                 const myId = getCurrentMemberId();
-                if (myId && ev.members.some(m => m.id === myId)) {
-                    // Личные расходы = доля участника во всех тратах, где он не исключён
-                    // (а не сумма, которую он оплатил сам)
+                if (myId && findById(ev.members, myId)) {
                     const mine = roundMoney(ev.expenses.reduce(
                         (sum, e) => sum + (getShares(e, ev.members)[myId] || 0), 0));
                     animateNumberTo(myExpensesValue, mine, ' ' + curSymbol());
@@ -2437,29 +2928,51 @@
                     myExpensesValue.textContent = '—';
                     animatedValues.delete(myExpensesValue);
                 }
+                updateMyBalance();
+            }
+
+            function updateMyBalance() {
+                const el = document.getElementById('myBalanceValue');
+                if (!el) return;
+                const ev = getActiveEvent();
+                const myId = getCurrentMemberId();
+                el.className = 'stat-balance';
+                if (!ev || !myId || !findById(ev.members, myId)) {
+                    el.textContent = '';
+                    return;
+                }
+                const txs = getTransactions();
+                if (!txs) {
+                    el.textContent = '';
+                    return;
+                }
+                const root = rootOf(myId, ev.members);
+                let net = 0;
+                txs.forEach(tx => {
+                    if (sameId(tx.toId, root)) net += tx.amount;
+                    if (sameId(tx.fromId, root)) net -= tx.amount;
+                });
+                net = roundMoney(net);
+                const sym = ' ' + curSymbol();
+                if (net > 0.001) {
+                    el.textContent = t('my_balance_owed') + ' ' + fmtMoney(net) + sym;
+                    el.className = 'stat-balance owed';
+                } else if (net < -0.001) {
+                    el.textContent = t('my_balance_owe') + ' ' + fmtMoney(-net) + sym;
+                    el.className = 'stat-balance owe';
+                } else {
+                    el.textContent = t('my_balance_even');
+                    el.className = 'stat-balance even';
+                }
             }
 
             function startEditing(expenseId) {
-                if (editingExpenseId === expenseId) {
+                if (sameId(editingExpenseId, expenseId)) {
                     cancelEditing();
                     return;
                 }
-                if (editingExpenseId) {
-                    cancelEditing();
-                }
                 editingExpenseId = expenseId;
                 renderAll();
-                // после рендера показываем edit-mode и скрываем display-mode для этого расхода
-                const items = document.querySelectorAll('.expense-item');
-                items.forEach(item => {
-                    const id = parseInt(item.dataset.id);
-                    if (id === expenseId) {
-                        const display = item.querySelector('.display-mode');
-                        const edit = item.querySelector('.edit-mode');
-                        if (display) display.style.display = 'none';
-                        if (edit) edit.style.display = 'flex';
-                    }
-                });
             }
 
             function cancelEditing() {
@@ -2473,54 +2986,33 @@
                 const exp = getExpense(id);
                 if (!exp) return;
 
-                const item = document.querySelector(`.expense-item[data-id="${id}"]`);
+                const item = document.querySelector('.expense-item[data-id="' + sid(id) + '"]');
                 if (!item) return;
+                const editMode = item.querySelector('.edit-mode');
+                const editor = editMode && editMode._editor;
+                const payerEl = item.querySelector('#edit-payer-' + sid(id));
+                const inputs = item.querySelectorAll('.edit-mode .edit-row input');
+                const descInput = inputs[0];
+                const amountInput = inputs[1];
+                if (!editor || !payerEl || !descInput || !amountInput) return;
 
-                const payerSelect = item.querySelector('#edit-payer-' + id);
-                const descInput = item.querySelector('.edit-mode .edit-row input[type="text"]');
-                const amountInput = item.querySelector('.edit-mode .edit-row input[type="number"]');
-                const checkboxes = item.querySelectorAll('.edit-mode .exclude-checkboxes input[type="checkbox"]');
-                const splitInputs = item.querySelectorAll('.edit-mode .split-row input');
-                const mode = item.querySelector('.edit-mode').dataset.mode;
-
-                const payerId = parseInt(payerSelect.value);
+                const payerId = payerEl.value;
                 if (!payerId) { alert(t('alert_choose_payer')); return; }
-                const desc = descInput.value.trim() || t('default_desc');
-                const amount = parseFloat(amountInput.value);
+                const amount = parseMoney(amountInput.value);
                 if (isNaN(amount) || amount <= 0) { alert(t('alert_enter_amount')); return; }
+                const collected = editor.collect();
+                if (!collected.ok) { alert(collected.message); return; }
 
-                const excluded = [];
-                checkboxes.forEach(cb => {
-                    if (cb.checked) excluded.push(parseInt(cb.value));
-                });
-
-                if (mode === 'custom') {
-                    const split = {};
-                    let sum = 0;
-                    splitInputs.forEach(inp => {
-                        const v = roundMoney(parseFloat(inp.value));
-                        if (v > 0) {
-                            split[inp.dataset.memberId] = v;
-                            sum += v;
-                        }
-                    });
-                    if (Object.keys(split).length === 0) { alert(t('alert_split_empty')); return; }
-                    if (Math.abs(sum - amount) > 0.01) {
-                        alert(t('alert_split_mismatch') + ': ' + fmtMoney(sum) + ' / ' + fmtMoney(amount) + ' ' + curSymbol());
-                        return;
-                    }
-                    exp.split = split;
-                } else {
-                    delete exp.split; // в облако нельзя писать undefined, поэтому именно delete
-                }
-
-                exp.payer = payerId;
-                exp.description = desc;
-                exp.amount = amount;
-                exp.excluded = excluded;
-
+                const expense = {
+                    id: exp.id,
+                    payer: payerId,
+                    description: descInput.value.trim() || t('default_desc'),
+                    amount: roundMoney(amount),
+                    excluded: collected.excluded
+                };
+                if (collected.split) expense.split = collected.split;
                 editingExpenseId = null;
-                saveState();
+                commit({ type: 'updateExpense', eventId: ev.id, expense });
                 renderAll();
             }
 
@@ -2533,9 +3025,8 @@
                     alert(t('alert_member_exists'));
                     return;
                 }
-                ev.members.push({ id: generateId(), name });
                 memberInput.value = '';
-                saveState();
+                commit({ type: 'addMember', eventId: ev.id, member: { id: generateId(), name } });
                 renderAll();
             }
 
@@ -2543,21 +3034,8 @@
                 const ev = getActiveEvent();
                 if (!ev) return;
                 if (!confirm(t('confirm_delete_member'))) return;
-                ev.members = ev.members.filter(m => m.id !== id);
-                ev.expenses = ev.expenses.filter(e => e.payer !== id);
-                ev.expenses.forEach(e => {
-                    if (e.excluded) e.excluded = e.excluded.filter(x => x !== id);
-                    if (e.split) delete e.split[id];
-                });
-                // Если за кого-то платил удалённый участник — снимаем эту связь
-                ev.members.forEach(m => {
-                    if (m.coveredBy === id) delete m.coveredBy;
-                });
-                if (editingExpenseId) {
-                    const exp = getExpense(editingExpenseId);
-                    if (!exp) cancelEditing();
-                }
-                saveState();
+                commit({ type: 'removeMember', eventId: ev.id, memberId: id });
+                if (editingExpenseId && !getExpense(editingExpenseId)) editingExpenseId = null;
                 renderAll();
             }
 
@@ -2565,50 +3043,66 @@
                 const ev = getActiveEvent();
                 if (!ev) { alert(t('alert_create_event_first')); return; }
                 if (editingExpenseId) {
-                    // если в режиме редактирования, сохраняем
                     saveExpenseInline(editingExpenseId);
                     return;
                 }
                 if (ev.members.length === 0) { alert(t('alert_add_member_first')); return; }
-                const payerId = parseInt(payerSelect.value);
+                const payerId = payerSelect.value;
                 if (!payerId) { alert(t('alert_choose_payer')); return; }
                 const desc = expenseDesc.value.trim() || t('default_desc');
-                const amount = parseFloat(expenseAmount.value);
+                const amount = parseMoney(expenseAmount.value);
                 if (isNaN(amount) || amount <= 0) { alert(t('alert_enter_amount')); return; }
 
-                const excluded = [];
-                // при добавлении нового расхода исключений нет, так как мы убрали общую панель
-                // можно оставить пустой массив
+                let excluded = [];
+                let split = null;
+                if (newSplitEditor) {
+                    const collected = newSplitEditor.collect();
+                    if (!collected.ok) { alert(collected.message); return; }
+                    excluded = collected.excluded;
+                    split = collected.split;
+                }
 
-                ev.expenses.push({
+                const expense = {
                     id: generateId(),
                     payer: payerId,
                     description: desc,
-                    amount: amount,
-                    excluded: excluded
-                });
+                    amount: roundMoney(amount),
+                    excluded
+                };
+                if (split) expense.split = split;
+                commit({ type: 'addExpense', eventId: ev.id, expense });
                 expenseDesc.value = '';
                 expenseAmount.value = '';
-                saveState();
+                newSplitMembersKey = '';
+                newSplitEditor = null;
                 renderAll();
             }
 
             function removeExpense(id) {
                 const ev = getActiveEvent();
                 if (!ev) return;
-                ev.expenses = ev.expenses.filter(e => e.id !== id);
-                if (editingExpenseId === id) cancelEditing();
-                saveState();
+                const exp = findById(ev.expenses, id);
+                if (!exp) return;
+                const snapshot = cloneData(exp);
+                const eventId = ev.id;
+                if (sameId(editingExpenseId, id)) editingExpenseId = null;
+                commit({ type: 'removeExpense', eventId, expenseId: exp.id });
                 renderAll();
+                showToast(t('expense_deleted_toast'), {
+                    onUndo: () => {
+                        commit({ type: 'addExpense', eventId, expense: snapshot });
+                        renderAll();
+                    }
+                });
             }
 
             function getTransactions() {
                 const ev = getActiveEvent();
                 if (!ev) return null;
-                const members = ev.members;
-                const expenses = ev.expenses;
+                const members = ev.members || [];
+                const expenses = ev.expenses || [];
                 if (members.length < 2) return null;
-                if (expenses.length === 0) return null;
+                if (expenses.length === 0 && !(ev.settlements || []).length) return null;
 
                 // Расчёт «по парам»: каждый платит тому, кто реально за него заплатил.
                 // Если за участника платит другой (общий бюджет пары), его доли и оплаты
@@ -2616,32 +3110,40 @@
                 // debts[должник][кредитор] — сколько первый должен второму по всем расходам.
                 const debts = {};
 
+                function addDebt(debtor, creditor, amount) {
+                    if (sameId(debtor, creditor) || !amount) return;
+                    const d = sid(debtor);
+                    const c = sid(creditor);
+                    if (!debts[d]) debts[d] = {};
+                    debts[d][c] = (debts[d][c] || 0) + amount;
+                }
+
                 expenses.forEach(exp => {
                     const shares = getShares(exp, members);
                     const payerRoot = rootOf(exp.payer, members);
                     members.forEach(m => {
                         const share = shares[m.id];
                         if (!(share > 0)) return;
-                        const debtorRoot = rootOf(m.id, members);
-                        if (debtorRoot === payerRoot) return; // сам себе / внутри пары — платить не нужно
-                        if (!debts[debtorRoot]) debts[debtorRoot] = {};
-                        debts[debtorRoot][payerRoot] = (debts[debtorRoot][payerRoot] || 0) + share;
+                        addDebt(rootOf(m.id, members), payerRoot, share);
                     });
                 });
 
-                // Встречные долги между двумя плательщиками взаимно погашаются
-                const roots = members.filter(m => rootOf(m.id, members) === m.id);
+                (ev.settlements || []).forEach(s => {
+                    addDebt(rootOf(s.fromId, members), rootOf(s.toId, members), -Number(s.amount || 0));
+                });
+
+                const roots = members.filter(m => sameId(rootOf(m.id, members), m.id));
                 const transactions = [];
                 for (let i = 0; i < roots.length; i++) {
                     for (let j = i + 1; j < roots.length; j++) {
                         const a = roots[i], b = roots[j];
-                        const aToB = (debts[a.id] && debts[a.id][b.id]) || 0;
-                        const bToA = (debts[b.id] && debts[b.id][a.id]) || 0;
+                        const aToB = (debts[sid(a.id)] && debts[sid(a.id)][sid(b.id)]) || 0;
+                        const bToA = (debts[sid(b.id)] && debts[sid(b.id)][sid(a.id)]) || 0;
                         const net = roundMoney(aToB - bToA);
                         if (net > 0.001) {
-                            transactions.push({ from: groupLabel(a, members), to: groupLabel(b, members), amount: net });
+                            transactions.push({ fromId: a.id, toId: b.id, from: groupLabel(a, members), to: groupLabel(b, members), amount: net });
                         } else if (net < -0.001) {
-                            transactions.push({ from: groupLabel(b, members), to: groupLabel(a, members), amount: -net });
+                            transactions.push({ fromId: b.id, toId: a.id, from: groupLabel(b, members), to: groupLabel(a, members), amount: -net });
                         }
                     }
                 }
@@ -2652,28 +3154,72 @@
             }
 
             function updateResult() {
+                const ev = getActiveEvent();
                 const transactions = getTransactions();
-                if (!transactions) {
+                const settlements = (ev && ev.settlements) || [];
+                const title = document.getElementById('settlementsTitle');
+                const settlementList = document.getElementById('settlementList');
+                if (!transactions && !settlements.length) {
                     resultBox.style.display = 'none';
                     return;
                 }
                 resultBox.style.display = 'block';
                 debtList.innerHTML = '';
-                if (transactions.length === 0) {
+                if (!transactions || transactions.length === 0) {
                     debtList.innerHTML = '<li class="empty-msg">' + t('all_settled') + '</li>';
                 } else {
                     transactions.forEach(tx => {
                         const li = document.createElement('li');
-                        li.innerHTML = `
-                            <span class="debt-row">
-                                <span class="names"><span class="from">${esc(tx.from)}</span> <span class="arrow">→</span> <span class="to">${esc(tx.to)}</span></span>
-                                <span class="leader"></span>
-                                <span class="sum">${fmtMoney(tx.amount)} ${esc(curSymbol())}</span>
-                            </span>
-                        `;
+                        const row = document.createElement('span');
+                        row.className = 'debt-row';
+                        row.innerHTML = `<span class="names"><span class="from">${esc(tx.from)}</span> <span class="arrow">→</span> <span class="to">${esc(tx.to)}</span></span><span class="leader"></span><span class="sum">${fmtMoney(tx.amount)} ${esc(curSymbol())}</span>`;
+                        const btn = document.createElement('button');
+                        btn.type = 'button';
+                        btn.className = 'btn-settle';
+                        btn.textContent = t('settle_btn');
+                        btn.addEventListener('click', () => addSettlement(tx.fromId, tx.toId, tx.amount));
+                        row.appendChild(btn);
+                        li.appendChild(row);
                         debtList.appendChild(li);
                     });
                 }
+                settlementList.replaceChildren();
+                if (!settlements.length) {
+                    title.hidden = true;
+                    return;
+                }
+                title.hidden = false;
+                title.textContent = t('settlements_title');
+                settlements.forEach(s => {
+                    const li = document.createElement('li');
+                    const label = document.createElement('span');
+                    label.textContent = labelById(s.fromId, ev.members) + ' → ' + labelById(s.toId, ev.members) + ': ' + fmtMoney(s.amount) + ' ' + curSymbol();
+                    const remove = document.createElement('span');
+                    remove.className = 'remove';
+                    remove.textContent = '×';
+                    remove.addEventListener('click', () => removeSettlement(s.id));
+                    li.appendChild(label);
+                    li.appendChild(remove);
+                    settlementList.appendChild(li);
+                });
+            }
+
+            function addSettlement(fromId, toId, amount) {
+                const ev = getActiveEvent();
+                if (!ev) return;
+                commit({
+                    type: 'addSettlement',
+                    eventId: ev.id,
+                    settlement: { id: generateId(), fromId, toId, amount: roundMoney(amount) }
+                });
+                renderAll();
+            }
+
+            function removeSettlement(id) {
+                const ev = getActiveEvent();
+                if (!ev) return;
+                commit({ type: 'removeSettlement', eventId: ev.id, settlementId: id });
+                renderAll();
             }
 
             function copyResult() {
@@ -2688,8 +3234,14 @@
                 let text = `${t('copy_result_event_label')}: ${ev.name || t('default_event_name')}\n`;
                 text += `${t('copy_result_who_owes')}\n`;
                 transactions.forEach(tx => {
-                    text += `- ${tx.from} → ${tx.to}: ${tx.amount.toLocaleString()} ${curSymbol()}\n`;
+                    text += `- ${tx.from} → ${tx.to}: ${fmtMoney(tx.amount)} ${curSymbol()}\n`;
                 });
+                if (ev.settlements && ev.settlements.length) {
+                    text += `\n${t('settlements_title')}\n`;
+                    ev.settlements.forEach(s => {
+                        text += `- ${labelById(s.fromId, ev.members)} → ${labelById(s.toId, ev.members)}: ${fmtMoney(s.amount)} ${curSymbol()}\n`;
+                    });
+                }
 
                 navigator.clipboard.writeText(text).then(() => {
                     showToast(t('copied_toast'));
@@ -2710,31 +3262,68 @@
 
             let toastTimeout;
 
-            function showToast(msg) {
-                toast.textContent = msg;
+            function showToast(msg, options) {
+                const onUndo = options && options.onUndo;
+                toast.replaceChildren();
+                toast.appendChild(document.createTextNode(msg));
+                toast.classList.toggle('has-action', !!onUndo);
+                if (onUndo) {
+                    const btn = document.createElement('button');
+                    btn.type = 'button';
+                    btn.className = 'toast-undo';
+                    btn.textContent = t('undo_btn');
+                    btn.addEventListener('click', () => {
+                        hideToast();
+                        onUndo();
+                    });
+                    toast.appendChild(btn);
+                }
                 toast.classList.add('show');
                 clearTimeout(toastTimeout);
-                toastTimeout = setTimeout(() => {
-                    toast.classList.remove('show');
-                }, 2000);
+                toastTimeout = setTimeout(hideToast, onUndo ? 5000 : 2000);
+            }
+
+            function hideToast() {
+                toast.classList.remove('show');
+                toast.classList.remove('has-action');
+            }
+
+            function syncNewExpenseSplit() {
+                const ev = getActiveEvent();
+                const members = ev ? ev.members : [];
+                const box = document.getElementById('newExpenseSplit');
+                const key = lang + '|' + members.map(m => sid(m.id) + ':' + m.name).join('|');
+                if (key === newSplitMembersKey && newSplitEditor) return;
+                const draft = newSplitEditor ? newSplitEditor.draft() : null;
+                newSplitMembersKey = key;
+                box.replaceChildren();
+                if (members.length < 2) {
+                    newSplitEditor = null;
+                    box.hidden = true;
+                    return;
+                }
+                box.hidden = false;
+                newSplitEditor = createSplitEditor(members, draft ? {
+                    mode: draft.mode,
+                    excluded: draft.excluded,
+                    rawValues: draft.rawValues
+                } : { mode: 'equal', excluded: [], split: null }, () => expenseAmount.value);
+                box.appendChild(newSplitEditor.root);
             }
 
             function renderAll() {
                 renderEvents();
                 renderMembers();
                 renderExpenses();
+                syncNewExpenseSplit();
                 updateResult();
-                // если есть редактируемый расход, показываем его edit-mode
                 if (editingExpenseId) {
-                    const items = document.querySelectorAll('.expense-item');
-                    items.forEach(item => {
-                        const id = parseInt(item.dataset.id);
-                        if (id === editingExpenseId) {
-                            const display = item.querySelector('.display-mode');
-                            const edit = item.querySelector('.edit-mode');
-                            if (display) display.style.display = 'none';
-                            if (edit) edit.style.display = 'flex';
-                        }
+                    document.querySelectorAll('.expense-item').forEach(item => {
+                        if (!sameId(item.dataset.id, editingExpenseId)) return;
+                        const display = item.querySelector('.display-mode');
+                        const edit = item.querySelector('.edit-mode');
+                        if (display) display.style.display = 'none';
+                        if (edit) edit.style.display = 'flex';
                     });
                 }
             }
@@ -2744,6 +3333,7 @@
                 applyStaticTranslations();
 
                 document.getElementById('groupIdLabel').textContent = groupId;
+                renderRecentGroups();
                 document.getElementById('inviteBtn').addEventListener('click', copyInviteLink);
                 document.getElementById('joinGroupBtn').addEventListener('click', joinGroupPrompt);
                 document.getElementById('newGroupBtn').addEventListener('click', createNewGroup);
@@ -2768,12 +3358,13 @@
                 addExpenseBtn.addEventListener('click', addExpense);
                 expenseDesc.addEventListener('keydown', (e) => { if (e.key === 'Enter') addExpense(); });
                 expenseAmount.addEventListener('keydown', (e) => { if (e.key === 'Enter') addExpense(); });
+                expenseAmount.addEventListener('input', () => { if (newSplitEditor) newSplitEditor.refresh(); });
 
                 copyResultBtn.addEventListener('click', copyResult);
                 addCoverBtn.addEventListener('click', addCover);
 
                 currentMemberSelect.addEventListener('change', () => {
-                    const val = currentMemberSelect.value ? parseInt(currentMemberSelect.value) : null;
+                    const val = currentMemberSelect.value || null;
                     setCurrentMemberId(val);
                     updateSummaryStats();
                 });
