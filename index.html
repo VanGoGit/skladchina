@@ -1959,9 +1959,15 @@
 
                 const myId = getCurrentMemberId();
                 if (myId && ev.members.some(m => m.id === myId)) {
-                    const mine = ev.expenses
-                        .filter(e => e.payer === myId)
-                        .reduce((sum, e) => sum + e.amount, 0);
+                    // Личные расходы = доля участника во всех тратах, где он не исключён
+                    // (а не сумма, которую он оплатил сам)
+                    const mine = Math.round(ev.expenses.reduce((sum, e) => {
+                        const excluded = e.excluded || [];
+                        if (excluded.includes(myId)) return sum;
+                        const participants = ev.members.filter(m => !excluded.includes(m.id));
+                        if (participants.length === 0) return sum;
+                        return sum + e.amount / participants.length;
+                    }, 0));
                     animateNumberTo(myExpensesValue, mine, ' ' + curSymbol());
                 } else {
                     myExpensesValue.textContent = '—';
@@ -2113,46 +2119,42 @@
                 if (members.length < 2) return null;
                 if (expenses.length === 0) return null;
 
-                const paid = {};
-                const owed = {};
-                members.forEach(m => { paid[m.id] = 0; owed[m.id] = 0; });
+                // Расчёт «по парам»: каждый платит тому, кто реально за него заплатил.
+                // debts[должник][кредитор] — сколько первый должен второму по всем расходам.
+                const debts = {};
+                members.forEach(m => { debts[m.id] = {}; });
 
                 expenses.forEach(exp => {
                     const payer = exp.payer;
-                    const amount = exp.amount;
                     const excluded = exp.excluded || [];
                     const participants = members.filter(m => !excluded.includes(m.id));
                     if (participants.length === 0) return;
-                    const perPerson = amount / participants.length;
-                    paid[payer] = (paid[payer] || 0) + amount;
+                    const perPerson = exp.amount / participants.length;
                     participants.forEach(m => {
-                        owed[m.id] = (owed[m.id] || 0) + perPerson;
+                        if (m.id === payer) return; // за себя платить самому себе не нужно
+                        if (!debts[m.id]) debts[m.id] = {};
+                        debts[m.id][payer] = (debts[m.id][payer] || 0) + perPerson;
                     });
                 });
 
-                const balance = {};
-                members.forEach(m => { balance[m.id] = (paid[m.id] || 0) - (owed[m.id] || 0); });
-
-                const creditors = members.filter(m => balance[m.id] > 0.001).map(m => ({ ...m, amount: balance[m.id] }));
-                const debtors = members.filter(m => balance[m.id] < -0.001).map(m => ({ ...m, amount: -balance[m.id] }));
-
-                creditors.sort((a, b) => b.amount - a.amount);
-                debtors.sort((a, b) => b.amount - a.amount);
-
+                // Встречные долги между двумя людьми взаимно погашаются
                 const transactions = [];
-                let i = 0, j = 0;
-                while (i < debtors.length && j < creditors.length) {
-                    const debtor = debtors[i];
-                    const creditor = creditors[j];
-                    const minAmt = Math.min(debtor.amount, creditor.amount);
-                    if (minAmt > 0.001) {
-                        transactions.push({ from: debtor.name, to: creditor.name, amount: minAmt });
+                for (let i = 0; i < members.length; i++) {
+                    for (let j = i + 1; j < members.length; j++) {
+                        const a = members[i], b = members[j];
+                        const aToB = (debts[a.id] && debts[a.id][b.id]) || 0;
+                        const bToA = (debts[b.id] && debts[b.id][a.id]) || 0;
+                        const net = Math.round((aToB - bToA) * 100) / 100;
+                        if (net > 0.001) {
+                            transactions.push({ from: a.name, to: b.name, amount: net });
+                        } else if (net < -0.001) {
+                            transactions.push({ from: b.name, to: a.name, amount: -net });
+                        }
                     }
-                    debtor.amount -= minAmt;
-                    creditor.amount -= minAmt;
-                    if (debtor.amount < 0.001) i++;
-                    if (creditor.amount < 0.001) j++;
                 }
+
+                // Сначала крупные суммы
+                transactions.sort((x, y) => y.amount - x.amount);
                 return transactions;
             }
 
