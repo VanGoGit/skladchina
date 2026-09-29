@@ -751,6 +751,110 @@
             justify-content: flex-end;
         }
 
+        /* ----- Ручная разбивка расхода ----- */
+        .expense-item .display-mode .info .split-details {
+            flex: 0 0 100%;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 2px 12px;
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+        .expense-item .display-mode .info .split-details b {
+            font-weight: 600;
+            color: var(--text-secondary);
+            font-family: var(--font-mono);
+        }
+        .split-mode {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+        .split-mode-btn {
+            padding: 5px 14px;
+            border: 1px solid var(--border-light);
+            border-radius: var(--radius-btn);
+            background: transparent;
+            color: var(--text-secondary);
+            font-family: var(--font-body);
+            font-size: 13px;
+            cursor: pointer;
+            transition: background 0.2s, color 0.2s, border-color 0.2s;
+        }
+        .split-mode-btn.active {
+            background: var(--accent);
+            border-color: var(--accent);
+            color: #fff;
+        }
+        .split-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        .split-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .split-row .split-name {
+            flex: 1;
+            font-size: 14px;
+            color: var(--text-primary);
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .split-row input {
+            width: 120px;
+            padding: 6px 10px;
+            border: 1px solid var(--border-light);
+            border-radius: var(--radius-input);
+            font-size: 14px;
+            font-family: var(--font-mono);
+            background: var(--bg-input);
+            color: var(--text-primary);
+            outline: none;
+            text-align: right;
+        }
+        .split-row input:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 4px rgba(31, 93, 78, 0.1);
+        }
+        .split-tools {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .split-summary {
+            font-family: var(--font-mono);
+            font-size: 13px;
+            color: var(--danger);
+        }
+        .split-summary.ok {
+            color: var(--accent);
+        }
+
+        /* ----- Общий бюджет (кто за кого платит) ----- */
+        .cover-block {
+            margin-top: var(--spacing-md);
+            padding-top: var(--spacing-sm);
+            border-top: 1px dashed var(--border-section);
+        }
+        .cover-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+        .cover-hint {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin: 2px 0 var(--spacing-sm);
+        }
+        .chip .cover-tag {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
         .result-box {
             background: var(--bg-result);
             border-radius: var(--radius-section);
@@ -1072,6 +1176,20 @@
                     <button class="btn btn-primary" id="addMemberBtn" data-i18n="add_btn">Добавить</button>
                 </div>
                 <div class="chip-list" id="memberList"></div>
+                <div class="cover-block" id="coverBlock" style="display:none;">
+                    <div class="cover-title" data-i18n="cover_title">💑 Общий бюджет</div>
+                    <div class="cover-hint" data-i18n="cover_hint">Если за участника платит другой (например, пара с общим бюджетом), все его расходы и долги переходят на того, кто платит.</div>
+                    <div class="flex-row">
+                        <div class="field">
+                            <select id="coverMemberSelect"></select>
+                        </div>
+                        <div class="field">
+                            <select id="coverPayerSelect"></select>
+                        </div>
+                        <button class="btn btn-outline" id="addCoverBtn" type="button" data-i18n="cover_btn">Связать</button>
+                    </div>
+                    <div class="chip-list" id="coverList"></div>
+                </div>
             </div>
 
             <div class="section">
@@ -1173,7 +1291,26 @@
                     toast_no_debts_to_copy: 'Нет долгов для копирования',
                     copy_result_event_label: 'Событие',
                     copy_result_who_owes: 'Кто кому должен:',
-                    unknown_payer: '❓'
+                    unknown_payer: '❓',
+                    split_equal_mode: 'Поровну',
+                    excluded_prefix: 'без',
+                    split_custom_mode: 'По суммам',
+                    split_hint: 'Укажите, сколько потратил каждый (сумма должна сойтись с общей):',
+                    split_fill_equal: '⚖️ Поровну',
+                    split_left: 'осталось',
+                    split_over: 'перебор',
+                    split_badge: 'по суммам',
+                    alert_split_empty: 'Укажите сумму хотя бы для одного участника',
+                    alert_split_mismatch: 'Сумма разбивки не равна сумме расхода',
+                    cover_title: '💑 Общий бюджет',
+                    cover_hint: 'Если за участника платит другой (например, пара с общим бюджетом), все его расходы и долги переходят на того, кто платит.',
+                    cover_member_placeholder: '— кто сам не платит —',
+                    cover_payer_placeholder: '— кто платит за него —',
+                    cover_btn: 'Связать',
+                    cover_tag_title: 'За него платит',
+                    alert_cover_choose: 'Выберите обоих участников',
+                    alert_cover_same: 'Выберите двух разных участников',
+                    alert_cover_cycle: 'Получится замкнутый круг: выбранный участник уже платит за этого'
                 },
                 en: {
                     page_title: 'Chip In — shared expense calculator',
@@ -1234,7 +1371,26 @@
                     toast_no_debts_to_copy: 'No debts to copy',
                     copy_result_event_label: 'Event',
                     copy_result_who_owes: 'Who owes whom:',
-                    unknown_payer: '❓'
+                    unknown_payer: '❓',
+                    split_equal_mode: 'Equally',
+                    excluded_prefix: 'except',
+                    split_custom_mode: 'By amounts',
+                    split_hint: 'Enter how much each person spent (must add up to the total):',
+                    split_fill_equal: '⚖️ Split equally',
+                    split_left: 'left',
+                    split_over: 'over by',
+                    split_badge: 'by amounts',
+                    alert_split_empty: 'Enter an amount for at least one participant',
+                    alert_split_mismatch: 'The split does not add up to the expense amount',
+                    cover_title: '💑 Shared budget',
+                    cover_hint: 'If someone else pays for a participant (e.g. a couple with a shared budget), all their expenses and debts move to the payer.',
+                    cover_member_placeholder: "— who doesn't pay —",
+                    cover_payer_placeholder: '— who pays for them —',
+                    cover_btn: 'Link',
+                    cover_tag_title: 'Paid for by',
+                    alert_cover_choose: 'Choose both participants',
+                    alert_cover_same: 'Choose two different participants',
+                    alert_cover_cycle: 'That would create a loop: the chosen participant already pays for this one'
                 }
             };
 
@@ -1460,6 +1616,95 @@
             const totalExpensesValue = document.getElementById('totalExpensesValue');
             const myExpensesValue = document.getElementById('myExpensesValue');
             const currentMemberSelect = document.getElementById('currentMemberSelect');
+
+            const coverBlock = document.getElementById('coverBlock');
+            const coverMemberSelect = document.getElementById('coverMemberSelect');
+            const coverPayerSelect = document.getElementById('coverPayerSelect');
+            const addCoverBtn = document.getElementById('addCoverBtn');
+            const coverList = document.getElementById('coverList');
+
+            // ====== Вспомогательные функции расчёта ======
+            function esc(s) {
+                return String(s).replace(/[&<>"']/g, ch => (
+                    { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]
+                ));
+            }
+
+            function roundMoney(x) { return Math.round(x * 100) / 100; }
+
+            function fmtMoney(x) { return roundMoney(x).toLocaleString(); }
+
+            // Делит сумму поровну между ids с точностью до копеек (остаток копеек раздаётся первым)
+            function distributeEqually(amount, ids) {
+                const res = {};
+                const n = ids.length;
+                if (!n) return res;
+                const cents = Math.round(amount * 100);
+                const base = Math.floor(cents / n);
+                let rem = cents - base * n;
+                ids.forEach(id => {
+                    res[id] = (base + (rem > 0 ? 1 : 0)) / 100;
+                    if (rem > 0) rem--;
+                });
+                return res;
+            }
+
+            // Доли участников в одном расходе: { memberId: сумма }.
+            // Режим «по суммам» — если у расхода есть split; иначе поровну между теми, кого не исключили.
+            function getShares(exp, members) {
+                const shares = {};
+                const amount = Number(exp.amount) || 0;
+
+                if (exp.split && typeof exp.split === 'object') {
+                    let sum = 0;
+                    members.forEach(m => {
+                        const v = Number(exp.split[m.id]);
+                        if (v > 0) { shares[m.id] = v; sum += v; }
+                    });
+                    if (sum > 0) {
+                        // Если разбивка не сходится с суммой (например, удалили участника),
+                        // пропорционально приводим её к сумме расхода — итог остаётся сбалансированным
+                        if (Math.abs(sum - amount) > 0.005) {
+                            Object.keys(shares).forEach(id => { shares[id] = shares[id] * amount / sum; });
+                        }
+                        return shares;
+                    }
+                }
+
+                const excluded = exp.excluded || [];
+                const participants = members.filter(m => !excluded.includes(m.id));
+                if (participants.length === 0) return shares;
+                const per = amount / participants.length;
+                participants.forEach(m => { shares[m.id] = per; });
+                return shares;
+            }
+
+            // Цепочка «кто за кого платит»: [участник, тот кто за него платит, ..., итоговый плательщик]
+            function coverChain(id, members) {
+                const byId = {};
+                members.forEach(m => { byId[m.id] = m; });
+                const chain = [];
+                let cur = byId[id];
+                while (cur && !chain.includes(cur.id)) {
+                    chain.push(cur.id);
+                    cur = cur.coveredBy ? byId[cur.coveredBy] : null;
+                }
+                return chain;
+            }
+
+            // Кто в итоге расплачивается за участника (он сам, если за него никто не платит)
+            function rootOf(id, members) {
+                const chain = coverChain(id, members);
+                return chain.length ? chain[chain.length - 1] : id;
+            }
+
+            // Подпись плательщика в итогах: «Влад (+Настя)», если за кого-то платит он
+            function groupLabel(root, members) {
+                const covered = members.filter(m => m.id !== root.id && rootOf(m.id, members) === root.id);
+                return covered.length
+                    ? `${root.name} (+${covered.map(m => m.name).join(', ')})`
+                    : root.name;
+            }
 
             function generateId() { return ++idCounter; }
 
@@ -1687,6 +1932,14 @@
                             }
                         });
                         chip.appendChild(nameSpan);
+                        const coverer = m.coveredBy ? ev.members.find(x => x.id === m.coveredBy) : null;
+                        if (coverer) {
+                            const tag = document.createElement('span');
+                            tag.className = 'cover-tag';
+                            tag.textContent = '→ ' + coverer.name;
+                            tag.title = t('cover_tag_title') + ': ' + coverer.name;
+                            chip.appendChild(tag);
+                        }
                         const removeSpan = document.createElement('span');
                         removeSpan.className = 'remove';
                         removeSpan.textContent = '×';
@@ -1703,6 +1956,83 @@
                 }
                 updatePayerSelect();
                 updateCurrentMemberSelect();
+                renderCovers();
+            }
+
+            // Блок «Общий бюджет»: выбор «кто не платит сам» → «кто платит за него» и список связей
+            function renderCovers() {
+                const ev = getActiveEvent();
+                if (!ev || ev.members.length < 2) {
+                    coverBlock.style.display = 'none';
+                    return;
+                }
+                coverBlock.style.display = '';
+
+                const prevMember = coverMemberSelect.value;
+                const prevPayer = coverPayerSelect.value;
+                [[coverMemberSelect, 'cover_member_placeholder'], [coverPayerSelect, 'cover_payer_placeholder']].forEach(([sel, key]) => {
+                    sel.innerHTML = '';
+                    const first = document.createElement('option');
+                    first.value = '';
+                    first.textContent = t(key);
+                    sel.appendChild(first);
+                    ev.members.forEach(m => {
+                        const opt = document.createElement('option');
+                        opt.value = m.id;
+                        opt.textContent = m.name;
+                        sel.appendChild(opt);
+                    });
+                });
+                if (prevMember && ev.members.some(m => m.id == prevMember)) coverMemberSelect.value = prevMember;
+                if (prevPayer && ev.members.some(m => m.id == prevPayer)) coverPayerSelect.value = prevPayer;
+
+                coverList.innerHTML = '';
+                ev.members.forEach(m => {
+                    const payer = m.coveredBy ? ev.members.find(x => x.id === m.coveredBy) : null;
+                    if (!payer) return;
+                    const chip = document.createElement('span');
+                    chip.className = 'chip';
+                    const label = document.createElement('span');
+                    label.textContent = m.name + ' → ' + payer.name;
+                    chip.appendChild(label);
+                    const removeSpan = document.createElement('span');
+                    removeSpan.className = 'remove';
+                    removeSpan.textContent = '×';
+                    removeSpan.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        removeCover(m.id);
+                    });
+                    chip.appendChild(removeSpan);
+                    coverList.appendChild(chip);
+                });
+            }
+
+            function addCover() {
+                const ev = getActiveEvent();
+                if (!ev) return;
+                const memberId = parseInt(coverMemberSelect.value);
+                const payerId = parseInt(coverPayerSelect.value);
+                if (!memberId || !payerId) { alert(t('alert_cover_choose')); return; }
+                if (memberId === payerId) { alert(t('alert_cover_same')); return; }
+                // Нельзя замыкать круг: если плательщик сам (через цепочку) зависит от этого участника
+                if (coverChain(payerId, ev.members).includes(memberId)) { alert(t('alert_cover_cycle')); return; }
+                const member = ev.members.find(m => m.id === memberId);
+                if (!member) return;
+                member.coveredBy = payerId;
+                coverMemberSelect.value = '';
+                coverPayerSelect.value = '';
+                saveState();
+                renderAll();
+            }
+
+            function removeCover(memberId) {
+                const ev = getActiveEvent();
+                if (!ev) return;
+                const member = ev.members.find(m => m.id === memberId);
+                if (!member) return;
+                delete member.coveredBy;
+                saveState();
+                renderAll();
             }
 
             function renderExpenses() {
@@ -1725,20 +2055,31 @@
                         const displayMode = document.createElement('div');
                         displayMode.className = 'display-mode';
                         const payerName = ev.members.find(m => m.id === e.payer)?.name || t('unknown_payer');
-                        let excludedNames = [];
-                        if (e.excluded && e.excluded.length > 0) {
-                            excludedNames = e.excluded.map(id => {
+                        const isCustomSplit = !!(e.split && typeof e.split === 'object');
+                        let noteHtml = '';
+                        let detailsHtml = '';
+                        if (isCustomSplit) {
+                            // Разбивка вручную: бейдж + детализация «кто сколько»
+                            noteHtml = `<span class="excluded-info">${esc(t('split_badge'))}</span>`;
+                            const shares = getShares(e, ev.members);
+                            const parts = ev.members
+                                .filter(m => shares[m.id] > 0)
+                                .map(m => `<span>${esc(m.name)} <b>${fmtMoney(shares[m.id])} ${esc(curSymbol())}</b></span>`);
+                            if (parts.length) detailsHtml = `<div class="split-details">${parts.join('')}</div>`;
+                        } else if (e.excluded && e.excluded.length > 0) {
+                            const excludedNames = e.excluded.map(id => {
                                 const m = ev.members.find(mm => mm.id === id);
                                 return m ? m.name : '?';
-                            }).filter(Boolean);
+                            });
+                            noteHtml = `<span class="excluded-info">(${esc(t('excluded_prefix'))}: ${esc(excludedNames.join(', '))})</span>`;
                         }
-                        const exclText = excludedNames.length ? ` (без: ${excludedNames.join(', ')})` : '';
                         displayMode.innerHTML = `
                             <div class="info">
-                                <span class="payer">${payerName}</span>
-                                <span class="desc">${e.description || '—'}</span>
-                                <span class="excluded-info">${exclText}</span>
-                                <span class="amount">${Number(e.amount).toLocaleString()} ${curSymbol()}</span>
+                                <span class="payer">${esc(payerName)}</span>
+                                <span class="desc">${esc(e.description || '—')}</span>
+                                ${noteHtml}
+                                <span class="amount">${fmtMoney(Number(e.amount))} ${esc(curSymbol())}</span>
+                                ${detailsHtml}
                             </div>
                             <span class="del" data-id="${e.id}">✕</span>
                         `;
@@ -1793,25 +2134,153 @@
 
                         editMode.appendChild(editRow);
 
-                        // Exclude checkboxes
+                        // Режим разбивки: поровну (галочки «исключить») или вручную по суммам
+                        editMode.dataset.mode = isCustomSplit ? 'custom' : 'equal';
+
+                        const modeRow = document.createElement('div');
+                        modeRow.className = 'split-mode';
+                        const equalModeBtn = document.createElement('button');
+                        equalModeBtn.type = 'button';
+                        equalModeBtn.className = 'split-mode-btn';
+                        equalModeBtn.textContent = t('split_equal_mode');
+                        const customModeBtn = document.createElement('button');
+                        customModeBtn.type = 'button';
+                        customModeBtn.className = 'split-mode-btn';
+                        customModeBtn.textContent = t('split_custom_mode');
+                        modeRow.appendChild(equalModeBtn);
+                        modeRow.appendChild(customModeBtn);
+                        editMode.appendChild(modeRow);
+
+                        // --- Панель «поровну»: галочки исключения ---
+                        const equalPanel = document.createElement('div');
+                        equalPanel.className = 'equal-panel';
+
                         const exclHint = document.createElement('div');
                         exclHint.className = 'exclude-hint';
                         exclHint.textContent = t('exclude_hint');
-                        editMode.appendChild(exclHint);
+                        equalPanel.appendChild(exclHint);
 
                         const exclContainer = document.createElement('div');
                         exclContainer.className = 'exclude-checkboxes';
+                        const exclCheckboxes = [];
                         ev.members.forEach(m => {
                             const label = document.createElement('label');
                             const cb = document.createElement('input');
                             cb.type = 'checkbox';
                             cb.value = m.id;
                             if (e.excluded && e.excluded.includes(m.id)) cb.checked = true;
+                            exclCheckboxes.push(cb);
                             label.appendChild(cb);
                             label.appendChild(document.createTextNode(' ' + m.name));
                             exclContainer.appendChild(label);
                         });
-                        editMode.appendChild(exclContainer);
+                        equalPanel.appendChild(exclContainer);
+                        editMode.appendChild(equalPanel);
+
+                        // --- Панель «по суммам»: сколько потратил каждый ---
+                        const customPanel = document.createElement('div');
+                        customPanel.className = 'split-panel';
+
+                        const splitHint = document.createElement('div');
+                        splitHint.className = 'exclude-hint';
+                        splitHint.textContent = t('split_hint');
+                        customPanel.appendChild(splitHint);
+
+                        // Стартовые значения: сохранённая разбивка или текущее «поровну»
+                        const equalIds = ev.members.filter(m => !(e.excluded || []).includes(m.id)).map(m => m.id);
+                        const prefill = isCustomSplit ? e.split : distributeEqually(Number(e.amount) || 0, equalIds);
+                        let splitTouched = isCustomSplit;
+
+                        const splitInputs = [];
+                        ev.members.forEach(m => {
+                            const row = document.createElement('div');
+                            row.className = 'split-row';
+                            const nameEl = document.createElement('span');
+                            nameEl.className = 'split-name';
+                            nameEl.textContent = m.name;
+                            const inp = document.createElement('input');
+                            inp.type = 'number';
+                            inp.min = '0';
+                            inp.step = 'any';
+                            inp.placeholder = '0';
+                            inp.dataset.memberId = m.id;
+                            inp.value = prefill[m.id] > 0 ? prefill[m.id] : '';
+                            inp.addEventListener('input', () => { splitTouched = true; updateSplitSummary(); });
+                            splitInputs.push(inp);
+                            row.appendChild(nameEl);
+                            row.appendChild(inp);
+                            customPanel.appendChild(row);
+                        });
+
+                        const splitTools = document.createElement('div');
+                        splitTools.className = 'split-tools';
+                        const fillEqualBtn = document.createElement('button');
+                        fillEqualBtn.type = 'button';
+                        fillEqualBtn.className = 'btn btn-outline btn-sm';
+                        fillEqualBtn.textContent = t('split_fill_equal');
+                        const splitSummary = document.createElement('span');
+                        splitSummary.className = 'split-summary';
+                        splitTools.appendChild(fillEqualBtn);
+                        splitTools.appendChild(splitSummary);
+                        customPanel.appendChild(splitTools);
+                        editMode.appendChild(customPanel);
+
+                        function updateSplitSummary() {
+                            const total = parseFloat(amountInput.value) || 0;
+                            const sum = splitInputs.reduce((s, inp) => s + (parseFloat(inp.value) > 0 ? parseFloat(inp.value) : 0), 0);
+                            const diff = roundMoney(total - sum);
+                            const cur = curSymbol();
+                            let text = `${fmtMoney(sum)} / ${fmtMoney(total)} ${cur}`;
+                            if (Math.abs(diff) < 0.005) {
+                                text = '✓ ' + text;
+                                splitSummary.classList.add('ok');
+                            } else {
+                                text += ` · ${diff > 0 ? t('split_left') : t('split_over')} ${fmtMoney(Math.abs(diff))} ${cur}`;
+                                splitSummary.classList.remove('ok');
+                            }
+                            splitSummary.textContent = text;
+                        }
+
+                        // Заполняет суммы поровну между теми, кого не отметили галочкой «исключить»
+                        function fillEqual(silent) {
+                            const total = parseFloat(amountInput.value);
+                            if (isNaN(total) || total <= 0) {
+                                if (!silent) alert(t('alert_enter_amount'));
+                                return;
+                            }
+                            const excludedIds = exclCheckboxes.filter(cb => cb.checked).map(cb => parseInt(cb.value));
+                            let ids = ev.members.filter(m => !excludedIds.includes(m.id)).map(m => m.id);
+                            if (ids.length === 0) ids = ev.members.map(m => m.id);
+                            const dist = distributeEqually(total, ids);
+                            splitInputs.forEach(inp => {
+                                const v = dist[inp.dataset.memberId];
+                                inp.value = v > 0 ? v : '';
+                            });
+                            updateSplitSummary();
+                        }
+
+                        function setMode(mode) {
+                            editMode.dataset.mode = mode;
+                            equalModeBtn.classList.toggle('active', mode === 'equal');
+                            customModeBtn.classList.toggle('active', mode === 'custom');
+                            equalPanel.style.display = mode === 'equal' ? '' : 'none';
+                            customPanel.style.display = mode === 'custom' ? 'flex' : 'none';
+                            if (mode === 'custom') {
+                                // Если суммы ещё не правили руками — подтягиваем актуальное «поровну»
+                                if (!splitTouched) fillEqual(true);
+                                updateSplitSummary();
+                            }
+                        }
+
+                        equalModeBtn.addEventListener('click', (evt) => { evt.stopPropagation(); setMode('equal'); });
+                        customModeBtn.addEventListener('click', (evt) => { evt.stopPropagation(); setMode('custom'); });
+                        fillEqualBtn.addEventListener('click', (evt) => {
+                            evt.stopPropagation();
+                            fillEqual(false);
+                            splitTouched = true;
+                        });
+                        amountInput.addEventListener('input', updateSplitSummary);
+                        setMode(isCustomSplit ? 'custom' : 'equal');
 
                         // Actions
                         const actions = document.createElement('div');
@@ -1961,13 +2430,8 @@
                 if (myId && ev.members.some(m => m.id === myId)) {
                     // Личные расходы = доля участника во всех тратах, где он не исключён
                     // (а не сумма, которую он оплатил сам)
-                    const mine = Math.round(ev.expenses.reduce((sum, e) => {
-                        const excluded = e.excluded || [];
-                        if (excluded.includes(myId)) return sum;
-                        const participants = ev.members.filter(m => !excluded.includes(m.id));
-                        if (participants.length === 0) return sum;
-                        return sum + e.amount / participants.length;
-                    }, 0));
+                    const mine = roundMoney(ev.expenses.reduce(
+                        (sum, e) => sum + (getShares(e, ev.members)[myId] || 0), 0));
                     animateNumberTo(myExpensesValue, mine, ' ' + curSymbol());
                 } else {
                     myExpensesValue.textContent = '—';
@@ -2013,9 +2477,11 @@
                 if (!item) return;
 
                 const payerSelect = item.querySelector('#edit-payer-' + id);
-                const descInput = item.querySelector('.edit-mode input[type="text"]');
-                const amountInput = item.querySelector('.edit-mode input[type="number"]');
+                const descInput = item.querySelector('.edit-mode .edit-row input[type="text"]');
+                const amountInput = item.querySelector('.edit-mode .edit-row input[type="number"]');
                 const checkboxes = item.querySelectorAll('.edit-mode .exclude-checkboxes input[type="checkbox"]');
+                const splitInputs = item.querySelectorAll('.edit-mode .split-row input');
+                const mode = item.querySelector('.edit-mode').dataset.mode;
 
                 const payerId = parseInt(payerSelect.value);
                 if (!payerId) { alert(t('alert_choose_payer')); return; }
@@ -2027,6 +2493,26 @@
                 checkboxes.forEach(cb => {
                     if (cb.checked) excluded.push(parseInt(cb.value));
                 });
+
+                if (mode === 'custom') {
+                    const split = {};
+                    let sum = 0;
+                    splitInputs.forEach(inp => {
+                        const v = roundMoney(parseFloat(inp.value));
+                        if (v > 0) {
+                            split[inp.dataset.memberId] = v;
+                            sum += v;
+                        }
+                    });
+                    if (Object.keys(split).length === 0) { alert(t('alert_split_empty')); return; }
+                    if (Math.abs(sum - amount) > 0.01) {
+                        alert(t('alert_split_mismatch') + ': ' + fmtMoney(sum) + ' / ' + fmtMoney(amount) + ' ' + curSymbol());
+                        return;
+                    }
+                    exp.split = split;
+                } else {
+                    delete exp.split; // в облако нельзя писать undefined, поэтому именно delete
+                }
 
                 exp.payer = payerId;
                 exp.description = desc;
@@ -2061,6 +2547,11 @@
                 ev.expenses = ev.expenses.filter(e => e.payer !== id);
                 ev.expenses.forEach(e => {
                     if (e.excluded) e.excluded = e.excluded.filter(x => x !== id);
+                    if (e.split) delete e.split[id];
+                });
+                // Если за кого-то платил удалённый участник — снимаем эту связь
+                ev.members.forEach(m => {
+                    if (m.coveredBy === id) delete m.coveredBy;
                 });
                 if (editingExpenseId) {
                     const exp = getExpense(editingExpenseId);
@@ -2120,35 +2611,37 @@
                 if (expenses.length === 0) return null;
 
                 // Расчёт «по парам»: каждый платит тому, кто реально за него заплатил.
+                // Если за участника платит другой (общий бюджет пары), его доли и оплаты
+                // записываются на этого другого — участники «склеиваются» в одного плательщика.
                 // debts[должник][кредитор] — сколько первый должен второму по всем расходам.
                 const debts = {};
-                members.forEach(m => { debts[m.id] = {}; });
 
                 expenses.forEach(exp => {
-                    const payer = exp.payer;
-                    const excluded = exp.excluded || [];
-                    const participants = members.filter(m => !excluded.includes(m.id));
-                    if (participants.length === 0) return;
-                    const perPerson = exp.amount / participants.length;
-                    participants.forEach(m => {
-                        if (m.id === payer) return; // за себя платить самому себе не нужно
-                        if (!debts[m.id]) debts[m.id] = {};
-                        debts[m.id][payer] = (debts[m.id][payer] || 0) + perPerson;
+                    const shares = getShares(exp, members);
+                    const payerRoot = rootOf(exp.payer, members);
+                    members.forEach(m => {
+                        const share = shares[m.id];
+                        if (!(share > 0)) return;
+                        const debtorRoot = rootOf(m.id, members);
+                        if (debtorRoot === payerRoot) return; // сам себе / внутри пары — платить не нужно
+                        if (!debts[debtorRoot]) debts[debtorRoot] = {};
+                        debts[debtorRoot][payerRoot] = (debts[debtorRoot][payerRoot] || 0) + share;
                     });
                 });
 
-                // Встречные долги между двумя людьми взаимно погашаются
+                // Встречные долги между двумя плательщиками взаимно погашаются
+                const roots = members.filter(m => rootOf(m.id, members) === m.id);
                 const transactions = [];
-                for (let i = 0; i < members.length; i++) {
-                    for (let j = i + 1; j < members.length; j++) {
-                        const a = members[i], b = members[j];
+                for (let i = 0; i < roots.length; i++) {
+                    for (let j = i + 1; j < roots.length; j++) {
+                        const a = roots[i], b = roots[j];
                         const aToB = (debts[a.id] && debts[a.id][b.id]) || 0;
                         const bToA = (debts[b.id] && debts[b.id][a.id]) || 0;
-                        const net = Math.round((aToB - bToA) * 100) / 100;
+                        const net = roundMoney(aToB - bToA);
                         if (net > 0.001) {
-                            transactions.push({ from: a.name, to: b.name, amount: net });
+                            transactions.push({ from: groupLabel(a, members), to: groupLabel(b, members), amount: net });
                         } else if (net < -0.001) {
-                            transactions.push({ from: b.name, to: a.name, amount: -net });
+                            transactions.push({ from: groupLabel(b, members), to: groupLabel(a, members), amount: -net });
                         }
                     }
                 }
@@ -2173,9 +2666,9 @@
                         const li = document.createElement('li');
                         li.innerHTML = `
                             <span class="debt-row">
-                                <span class="names"><span class="from">${tx.from}</span> <span class="arrow">→</span> <span class="to">${tx.to}</span></span>
+                                <span class="names"><span class="from">${esc(tx.from)}</span> <span class="arrow">→</span> <span class="to">${esc(tx.to)}</span></span>
                                 <span class="leader"></span>
-                                <span class="sum">${tx.amount.toLocaleString()} ${curSymbol()}</span>
+                                <span class="sum">${fmtMoney(tx.amount)} ${esc(curSymbol())}</span>
                             </span>
                         `;
                         debtList.appendChild(li);
@@ -2277,6 +2770,7 @@
                 expenseAmount.addEventListener('keydown', (e) => { if (e.key === 'Enter') addExpense(); });
 
                 copyResultBtn.addEventListener('click', copyResult);
+                addCoverBtn.addEventListener('click', addCover);
 
                 currentMemberSelect.addEventListener('change', () => {
                     const val = currentMemberSelect.value ? parseInt(currentMemberSelect.value) : null;
