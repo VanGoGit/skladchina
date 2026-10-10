@@ -1199,7 +1199,147 @@
             gap: 8px;
         }
 
+        /* ---- Меню «⋯» для смены и создания группы ---- */
+        .group-menu { position: relative; }
+        .group-menu > summary {
+            list-style: none;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 36px;
+            font-size: 18px;
+            line-height: 1;
+        }
+        .group-menu > summary::-webkit-details-marker { display: none; }
+        .group-menu-list {
+            position: absolute;
+            right: 0;
+            top: calc(100% + 6px);
+            z-index: 30;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            padding: 8px;
+            background: var(--bg-app);
+            border: 1px solid var(--border-section);
+            border-radius: var(--radius-input);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.18);
+            white-space: nowrap;
+        }
+
+        /* ---- Подсказка для нового пользователя: три шага ---- */
+        .onboarding {
+            list-style: none;
+            margin: 0 0 var(--spacing-lg);
+            padding: var(--spacing-md) var(--spacing-lg);
+            border: 1px dashed var(--border-light);
+            border-radius: var(--radius-input);
+            background: var(--bg-section);
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .onboarding[hidden] { display: none; }
+        .onb-title {
+            font-family: var(--font-display);
+            font-weight: 600;
+            font-size: 17px;
+            color: var(--text-primary);
+        }
+        .onb-step {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 15px;
+            color: var(--text-muted);
+        }
+        .onb-num {
+            flex: 0 0 28px;
+            height: 28px;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 14px;
+            border: 1px solid var(--border-light);
+        }
+        .onb-step.active { color: var(--text-primary); font-weight: 600; }
+        .onb-step.active .onb-num { background: var(--accent); border-color: var(--accent); color: #fff; }
+        .onb-step.done { text-decoration: line-through; }
+        .onb-step.done .onb-num { color: var(--accent); border-color: var(--accent); }
+        /* Разделы появляются по мере необходимости */
+        #activeEventContent[data-stage="noevent"] > :not(.onboarding),
+        #activeEventContent[data-stage="nomembers"] > :not(.onboarding):not(#membersSection) {
+            display: none !important;
+        }
+
+        /* ---- «Общий бюджет» свёрнут по умолчанию ---- */
+        .cover-block > summary { list-style: none; cursor: pointer; user-select: none; }
+        .cover-block > summary::-webkit-details-marker { display: none; }
+        .cover-block > summary::before { content: '▸ '; color: var(--text-muted); }
+        .cover-block[open] > summary::before { content: '▾ '; }
+        .cover-block[open] > summary { margin-bottom: 4px; }
+
+        .btn-add { font-size: 22px; font-weight: 700; line-height: 1; min-width: 46px; padding-left: 0; padding-right: 0; }
+
+        .stat-balance.hint { color: var(--text-muted); font-size: 13px; font-weight: 400; }
+        .stat-select.attention { border-color: var(--accent); color: var(--accent); }
+
+        /* ---- Кнопка «к итогу» на телефоне ---- */
+        .jump-result {
+            position: fixed;
+            left: 16px;   /* слева: справа в строках расходов кнопки удаления */
+            bottom: 16px;
+            z-index: 900;
+            padding: 12px 18px;
+            border: none;
+            border-radius: var(--radius-btn);
+            background: var(--success);
+            color: #fff;
+            font-family: var(--font-body);
+            font-size: 15px;
+            font-weight: 600;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.25);
+            cursor: pointer;
+        }
+        .jump-result[hidden] { display: none; }
+        /* Пока показано уведомление (например, «Расход удалён · Вернуть»), кнопка поднимается над ним */
+        body:has(.toast.show) .jump-result { bottom: 96px; }
+
+        /* ---- Сенсорные экраны: зоны нажатия не меньше ~40 px ---- */
+        @media (pointer: coarse), (max-width: 600px) {
+            .chip .remove, .event-chip .remove {
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                min-width: 34px;
+                min-height: 34px;
+                margin: -8px -12px -8px -6px;
+                font-size: 20px;
+            }
+            .expense-item .display-mode .del {
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                min-width: 42px;
+                min-height: 42px;
+                margin: -10px -10px -10px 0;
+                font-size: 18px;
+            }
+            .btn-sm, .btn-copy, .split-mode-btn, .stat-select, .group-menu > summary { min-height: 40px; }
+            .split-editor .exclude-checkboxes input[type="checkbox"],
+            .expense-item .edit-mode .exclude-checkboxes input[type="checkbox"],
+            .simplify-toggle input { width: 20px; height: 20px; }
+            .split-editor .exclude-checkboxes label,
+            .expense-item .edit-mode .exclude-checkboxes label,
+            .simplify-toggle { min-height: 40px; }
+        }
+
         @media (min-width: 900px) {
+            #activeEventContent > .onboarding { grid-column: 1 / -1; }
+            #activeEventContent[data-stage="nomembers"] > #membersSection { grid-column: 1 / -1; }
             #activeEventContent {
                 display: grid;
                 grid-template-columns: minmax(0, 0.92fr) minmax(0, 1.08fr);
@@ -1281,8 +1421,13 @@
                 </div>
                 <div class="group-actions">
                     <button class="btn btn-outline btn-sm" id="inviteBtn" type="button" data-i18n="invite_btn">🔗 Пригласить</button>
-                    <button class="btn btn-outline btn-sm" id="joinGroupBtn" type="button" data-i18n="join_group_btn">🔑 Другая группа</button>
-                    <button class="btn btn-outline btn-sm" id="newGroupBtn" type="button" data-i18n="new_group_btn">🆕 Новая группа</button>
+                    <details class="group-menu" id="groupMenu">
+                        <summary class="btn btn-outline btn-sm" data-i18n-title="more_title" aria-label="⋯">⋯</summary>
+                        <div class="group-menu-list">
+                            <button class="btn btn-outline btn-sm" id="joinGroupBtn" type="button" data-i18n="join_group_btn">🔑 Другая группа</button>
+                            <button class="btn btn-outline btn-sm" id="newGroupBtn" type="button" data-i18n="new_group_btn">🆕 Новая группа</button>
+                        </div>
+                    </details>
                 </div>
             </div>
             <div class="recent-groups" id="recentGroups" hidden></div>
@@ -1301,6 +1446,12 @@
         </div>
 
         <div id="activeEventContent">
+            <ol class="onboarding" id="onboarding" hidden>
+                <li class="onb-title" data-i18n="onb_title">Как это работает</li>
+                <li class="onb-step" data-step="1"><span class="onb-num">1</span><span data-i18n="onb_step1">Назовите событие</span></li>
+                <li class="onb-step" data-step="2"><span class="onb-num">2</span><span data-i18n="onb_step2">Добавьте участников</span></li>
+                <li class="onb-step" data-step="3"><span class="onb-num">3</span><span data-i18n="onb_step3">Записывайте траты</span></li>
+            </ol>
             <div class="summary-row" id="summaryRow">
                 <div class="stat-card">
                     <span class="stat-label" data-i18n="total_expenses_label">Общие расходы</span>
@@ -1318,7 +1469,7 @@
                 </div>
             </div>
 
-            <div class="section">
+            <div class="section" id="membersSection">
                 <div class="section-header">
                     <span data-i18n="participants_title">👥 Участники</span>
                     <span class="badge" id="memberCount">0</span>
@@ -1330,8 +1481,8 @@
                     <button class="btn btn-primary" id="addMemberBtn" data-i18n="add_btn">Добавить</button>
                 </div>
                 <div class="chip-list" id="memberList"></div>
-                <div class="cover-block" id="coverBlock" style="display:none;">
-                    <div class="cover-title" data-i18n="cover_title">💑 Общий бюджет</div>
+                <details class="cover-block" id="coverBlock" style="display:none;">
+                    <summary class="cover-title" data-i18n="cover_title">💑 Общий бюджет</summary>
                     <div class="cover-hint" data-i18n="cover_hint">Если за участника платит другой (например, пара с общим бюджетом), все его расходы и долги переходят на того, кто платит.</div>
                     <div class="flex-row">
                         <div class="field">
@@ -1343,10 +1494,10 @@
                         <button class="btn btn-outline" id="addCoverBtn" type="button" data-i18n="cover_btn">Связать</button>
                     </div>
                     <div class="chip-list" id="coverList"></div>
-                </div>
+                </details>
             </div>
 
-            <div class="section">
+            <div class="section" id="expensesSection">
                 <div class="section-header">
                     <span data-i18n="expenses_title">💸 Расходы</span>
                     <span class="badge" id="expenseCount">0</span>
@@ -1363,7 +1514,7 @@
                     <div class="field-sm">
                         <input type="text" inputmode="decimal" autocomplete="off" id="expenseAmount" placeholder="Сумма" data-i18n-placeholder="amount_placeholder" />
                     </div>
-                    <button class="btn btn-success" id="addExpenseBtn">➕</button>
+                    <button class="btn btn-success btn-add" id="addExpenseBtn" type="button" data-i18n-title="add_expense_title" aria-label="+">+</button>
                 </div>
                 <div class="new-expense-split" id="newExpenseSplit" hidden></div>
                 <div id="expenseList"></div>
@@ -1387,6 +1538,7 @@
         </div>
     </div>
 
+    <button class="jump-result" id="jumpResultBtn" type="button" hidden data-i18n="jump_result">⚖️ Кто кому должен</button>
     <div class="toast" id="toast">Скопировано!</div>
 
     <script>
@@ -1414,13 +1566,13 @@
                     member_name_placeholder: 'Имя участника',
                     add_btn: 'Добавить',
                     expenses_title: '💸 Расходы',
-                    payer_placeholder: '— плательщик —',
-                    expense_desc_placeholder: 'За что (еда, такси…)',
+                    payer_placeholder: 'Кто платил',
+                    expense_desc_placeholder: 'За что',
                     amount_placeholder: 'Сумма',
                     who_owes_whom_title: '⚖️ Кто кому должен',
                     copy_btn: '📋 Копировать',
                     copied_toast: 'Скопировано!',
-                    exclude_hint: 'Отметьте, кого исключить из этого расхода:',
+                    exclude_hint: 'Кто участвовал в этом расходе:',
                     desc_edit_placeholder: 'Описание',
                     save_btn: 'Сохранить',
                     cancel_btn: 'Отмена',
@@ -1463,10 +1615,10 @@
                     split_badge: 'по суммам',
                     alert_split_empty: 'Укажите сумму хотя бы для одного участника',
                     alert_split_mismatch: 'Сумма разбивки не равна сумме расхода',
-                    cover_title: '💑 Общий бюджет',
+                    cover_title: '💑 Общий бюджет (для пар)',
                     cover_hint: 'Если за участника платит другой (например, пара с общим бюджетом), все его расходы и долги переходят на того, кто платит.',
-                    cover_member_placeholder: '— кто сам не платит —',
-                    cover_payer_placeholder: '— кто платит за него —',
+                    cover_member_placeholder: 'Кто не платит сам',
+                    cover_payer_placeholder: 'Кто платит за него',
                     cover_btn: 'Связать',
                     cover_tag_title: 'За него платит',
                     alert_cover_choose: 'Выберите обоих участников',
@@ -1480,6 +1632,15 @@
                     simplify_hint: 'Выключено: каждый возвращает тому, кто за него платил. Включено: меньше переводов — считаются только итоговые балансы, круговые долги взаимно гасятся.',
                     settlements_title: 'Уже перевели',
                     undo_btn: 'Вернуть',
+                    more_title: 'Другая группа или новая',
+                    onb_title: 'Как это работает',
+                    onb_step1: 'Назовите событие — поездку, ужин, поход',
+                    onb_step2: 'Добавьте участников — хотя бы двоих',
+                    onb_step3: 'Записывайте траты — Складчина сама посчитает, кто кому должен',
+                    alert_nobody: 'Отметьте хотя бы одного участника расхода',
+                    who_am_i_hint: 'Выберите себя — покажем, сколько должны вам или вы',
+                    jump_result: '⚖️ Кто кому должен',
+                    add_expense_title: 'Добавить расход',
                     expense_deleted_toast: 'Расход удалён',
                     recent_groups: 'Недавние'
                 },
@@ -1504,13 +1665,13 @@
                     member_name_placeholder: 'Participant name',
                     add_btn: 'Add',
                     expenses_title: '💸 Expenses',
-                    payer_placeholder: '— payer —',
-                    expense_desc_placeholder: 'What for (food, taxi…)',
+                    payer_placeholder: 'Who paid',
+                    expense_desc_placeholder: 'What for',
                     amount_placeholder: 'Amount',
                     who_owes_whom_title: '⚖️ Who owes whom',
                     copy_btn: '📋 Copy',
                     copied_toast: 'Copied!',
-                    exclude_hint: 'Check who to exclude from this expense:',
+                    exclude_hint: 'Who took part in this expense:',
                     desc_edit_placeholder: 'Description',
                     save_btn: 'Save',
                     cancel_btn: 'Cancel',
@@ -1553,10 +1714,10 @@
                     split_badge: 'by amounts',
                     alert_split_empty: 'Enter an amount for at least one participant',
                     alert_split_mismatch: 'The split does not add up to the expense amount',
-                    cover_title: '💑 Shared budget',
+                    cover_title: '💑 Shared budget (for couples)',
                     cover_hint: 'If someone else pays for a participant (e.g. a couple with a shared budget), all their expenses and debts move to the payer.',
-                    cover_member_placeholder: "— who doesn't pay —",
-                    cover_payer_placeholder: '— who pays for them —',
+                    cover_member_placeholder: "Who doesn't pay",
+                    cover_payer_placeholder: 'Who pays for them',
                     cover_btn: 'Link',
                     cover_tag_title: 'Paid for by',
                     alert_cover_choose: 'Choose both participants',
@@ -1570,6 +1731,15 @@
                     simplify_hint: 'Off: everyone pays back whoever paid for them. On: fewer transfers — only final balances count, circular debts cancel out.',
                     settlements_title: 'Already paid',
                     undo_btn: 'Undo',
+                    more_title: 'Switch or create a group',
+                    onb_title: 'How it works',
+                    onb_step1: 'Name the event — a trip, a dinner, a hike',
+                    onb_step2: 'Add participants — at least two',
+                    onb_step3: 'Log expenses — Skladchina works out who owes whom',
+                    alert_nobody: 'Select at least one participant for this expense',
+                    who_am_i_hint: 'Pick yourself to see what you owe or are owed',
+                    jump_result: '⚖️ Who owes whom',
+                    add_expense_title: 'Add expense',
                     expense_deleted_toast: 'Expense deleted',
                     recent_groups: 'Recent'
                 }
@@ -2319,13 +2489,8 @@
 
             function renderEvents() {
                 eventsList.innerHTML = '';
-                if (events.length === 0) {
-                    const placeholder = document.createElement('span');
-                    placeholder.className = 'empty-msg';
-                    placeholder.textContent = t('no_events');
-                    eventsList.appendChild(placeholder);
-                    return;
-                }
+                // Пустой список не подписываем: что делать дальше, объясняют шаги ниже
+                if (events.length === 0) return;
                 events.forEach(ev => {
                     const chip = document.createElement('span');
                     chip.className = 'event-chip' + (sameId(ev.id, activeEventId) ? ' active' : '');
@@ -2586,7 +2751,7 @@
                     const cb = document.createElement('input');
                     cb.type = 'checkbox';
                     cb.value = sid(m.id);
-                    if (includesId(initial && initial.excluded, m.id)) cb.checked = true;
+                    cb.checked = !includesId(initial && initial.excluded, m.id);
                     exclCheckboxes.push(cb);
                     label.appendChild(cb);
                     label.appendChild(document.createTextNode(' ' + m.name));
@@ -2668,7 +2833,7 @@
                         if (!silent) alert(t('alert_enter_amount'));
                         return;
                     }
-                    const excludedIds = exclCheckboxes.filter(cb => cb.checked).map(cb => cb.value);
+                    const excludedIds = exclCheckboxes.filter(cb => !cb.checked).map(cb => cb.value);
                     let ids = members.filter(m => !includesId(excludedIds, m.id)).map(m => m.id);
                     if (!ids.length) ids = members.map(m => m.id);
                     const dist = distributeEqually(total, ids);
@@ -2707,13 +2872,16 @@
                     draft() {
                         return {
                             mode: root.dataset.mode,
-                            excluded: exclCheckboxes.filter(cb => cb.checked).map(cb => cb.value),
+                            excluded: exclCheckboxes.filter(cb => !cb.checked).map(cb => cb.value),
                             rawValues: Object.fromEntries(splitInputs.map(inp => [inp.dataset.memberId, inp.value]))
                         };
                     },
                     collect() {
-                        const excluded = exclCheckboxes.filter(cb => cb.checked).map(cb => cb.value);
-                        if (root.dataset.mode !== 'custom') return { ok: true, excluded, split: null };
+                        const excluded = exclCheckboxes.filter(cb => !cb.checked).map(cb => cb.value);
+                        if (root.dataset.mode !== 'custom') {
+                            if (excluded.length >= members.length) return { ok: false, message: t('alert_nobody') };
+                            return { ok: true, excluded, split: null };
+                        }
                         const amount = parseMoney(getAmount());
                         const split = {};
                         let sum = 0;
@@ -3008,6 +3176,13 @@
                 const ev = getActiveEvent();
                 const myId = getCurrentMemberId();
                 el.className = 'stat-balance';
+                const needSelf = !!ev && ev.members.length >= 2 && !(myId && findById(ev.members, myId));
+                currentMemberSelect.classList.toggle('attention', needSelf);
+                if (needSelf) {
+                    el.textContent = t('who_am_i_hint');
+                    el.className = 'stat-balance hint';
+                    return;
+                }
                 if (!ev || !myId || !findById(ev.members, myId)) {
                     el.textContent = '';
                     return;
@@ -3414,7 +3589,35 @@
                 box.appendChild(newSplitEditor.root);
             }
 
+            // Новичку показываем только нужное: событие → участники → расходы и итог
+            function updateStage() {
+                const ev = getActiveEvent();
+                const count = ev ? ev.members.length : 0;
+                const stage = !ev ? 'noevent' : (count < 2 ? 'nomembers' : 'ready');
+                document.getElementById('activeEventContent').dataset.stage = stage;
+                const onb = document.getElementById('onboarding');
+                onb.hidden = stage === 'ready';
+                const current = stage === 'noevent' ? 1 : 2;
+                onb.querySelectorAll('.onb-step').forEach(li => {
+                    const n = Number(li.dataset.step);
+                    li.classList.toggle('done', n < current);
+                    li.classList.toggle('active', n === current);
+                });
+            }
+
+            // На узком экране итог далеко внизу — показываем кнопку, пока он не виден
+            const narrowScreen = window.matchMedia('(max-width: 899px)');
+            function updateJumpButton() {
+                const btn = document.getElementById('jumpResultBtn');
+                const box = document.getElementById('resultBox');
+                const ready = document.getElementById('activeEventContent').dataset.stage === 'ready';
+                const shown = ready && box.style.display !== 'none';
+                const below = box.getBoundingClientRect().top > window.innerHeight - 60;
+                btn.hidden = !(narrowScreen.matches && shown && below);
+            }
+
             function renderAll() {
+                updateStage();
                 renderEvents();
                 renderMembers();
                 renderExpenses();
@@ -3429,6 +3632,7 @@
                         if (edit) edit.style.display = 'flex';
                     });
                 }
+                updateJumpButton();
             }
 
             function init() {
@@ -3464,6 +3668,21 @@
                 expenseAmount.addEventListener('input', () => { if (newSplitEditor) newSplitEditor.refresh(); });
 
                 copyResultBtn.addEventListener('click', copyResult);
+
+                const groupMenu = document.getElementById('groupMenu');
+                document.addEventListener('click', (e) => {
+                    if (groupMenu.open && !groupMenu.contains(e.target)) groupMenu.open = false;
+                });
+                groupMenu.querySelectorAll('.group-menu-list button').forEach(b => {
+                    b.addEventListener('click', () => { groupMenu.open = false; });
+                });
+
+                const jumpBtn = document.getElementById('jumpResultBtn');
+                jumpBtn.addEventListener('click', () => {
+                    document.getElementById('resultBox').scrollIntoView({ behavior: 'smooth', block: 'start' });
+                });
+                window.addEventListener('scroll', updateJumpButton, { passive: true });
+                window.addEventListener('resize', updateJumpButton);
 
                 const simplifyToggle = document.getElementById('simplifyToggle');
                 simplifyToggle.checked = simplifyDebts;
