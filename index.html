@@ -1011,6 +1011,21 @@
             transition: color 0.3s;
             margin: 0;
         }
+        .simplify-toggle {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            margin: calc(-1 * var(--spacing-md) / 2) 0 var(--spacing-md);
+            font-size: 13px;
+            color: var(--text-secondary);
+            cursor: pointer;
+            user-select: none;
+        }
+        .simplify-toggle input {
+            accent-color: var(--accent);
+            margin: 0;
+            cursor: pointer;
+        }
         .debt-list {
             list-style: none;
             padding: 0;
@@ -1360,6 +1375,10 @@
                         <h3 data-i18n="who_owes_whom_title">⚖️ Кто кому должен</h3>
                         <button class="btn-copy" id="copyResultBtn" data-i18n="copy_btn">📋 Копировать</button>
                     </div>
+                    <label class="simplify-toggle" data-i18n-title="simplify_hint">
+                        <input type="checkbox" id="simplifyToggle">
+                        <span data-i18n="simplify_label">Упростить переводы</span>
+                    </label>
                     <ul class="debt-list" id="debtList"></ul>
                     <div class="settlements-title" id="settlementsTitle" hidden></div>
                     <ul class="settlement-list" id="settlementList"></ul>
@@ -1457,6 +1476,8 @@
                     my_balance_owe: 'ты должен',
                     my_balance_even: 'ты в расчёте',
                     settle_btn: 'Перевёл',
+                    simplify_label: 'Упростить переводы',
+                    simplify_hint: 'Выключено: каждый возвращает тому, кто за него платил. Включено: меньше переводов — считаются только итоговые балансы, круговые долги взаимно гасятся.',
                     settlements_title: 'Уже перевели',
                     undo_btn: 'Вернуть',
                     expense_deleted_toast: 'Расход удалён',
@@ -1545,6 +1566,8 @@
                     my_balance_owe: 'you owe',
                     my_balance_even: 'you are settled',
                     settle_btn: 'Paid',
+                    simplify_label: 'Simplify transfers',
+                    simplify_hint: 'Off: everyone pays back whoever paid for them. On: fewer transfers — only final balances count, circular debts cancel out.',
                     settlements_title: 'Already paid',
                     undo_btn: 'Undo',
                     expense_deleted_toast: 'Expense deleted',
@@ -1553,6 +1576,8 @@
             };
 
             let lang = localStorage.getItem('lang') || 'ru';
+            // Режим расчёта долгов — личная настройка браузера, как язык и тема
+            let simplifyDebts = localStorage.getItem('simplifyDebts') === '1';
 
             function t(key) {
                 return (T[lang] && T[lang][key] !== undefined) ? T[lang][key] : (T.ru[key] || key);
@@ -1566,6 +1591,9 @@
                 });
                 document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
                     el.placeholder = t(el.getAttribute('data-i18n-placeholder'));
+                });
+                document.querySelectorAll('[data-i18n-title]').forEach(el => {
+                    el.title = t(el.getAttribute('data-i18n-title'));
                 });
                 document.getElementById('langLabel').textContent = lang.toUpperCase();
                 setTheme(document.body.classList.contains('dark-theme') ? 'dark' : 'light');
@@ -1839,6 +1867,26 @@
             function sameId(a, b) { return sid(a) !== '' && sid(a) === sid(b); }
             function includesId(list, id) { return (list || []).some(x => sameId(x, id)); }
             function findById(list, id) { return (list || []).find(x => sameId(x.id, id)) || null; }
+
+            // Идентификаторы попадают в разметку и селекторы, а записать в общую базу может любой,
+            // у кого есть код группы. Поэтому всё, что пришло извне, пропускаем только с «безопасными» id.
+            function isSafeId(id) { return /^[A-Za-z0-9_-]{1,64}$/.test(sid(id)); }
+
+            function sanitizeEvents(list) {
+                return (Array.isArray(list) ? list : []).filter(ev => ev && isSafeId(ev.id)).map(ev => {
+                    const members = (ev.members || []).filter(m => m && isSafeId(m.id));
+                    members.forEach(m => { if (m.coveredBy != null && !isSafeId(m.coveredBy)) delete m.coveredBy; });
+                    const expenses = (ev.expenses || []).filter(x => x && isSafeId(x.id) && isSafeId(x.payer));
+                    expenses.forEach(x => {
+                        if (Array.isArray(x.excluded)) x.excluded = x.excluded.filter(isSafeId);
+                        if (x.split && typeof x.split === 'object') {
+                            Object.keys(x.split).forEach(k => { if (!isSafeId(k)) delete x.split[k]; });
+                        }
+                    });
+                    const settlements = (ev.settlements || []).filter(s => s && isSafeId(s.id) && isSafeId(s.fromId) && isSafeId(s.toId));
+                    return Object.assign({}, ev, { members, expenses, settlements });
+                });
+            }
 
             function roundMoney(x) { return Math.round((Number(x) || 0) * 100) / 100; }
 
@@ -2133,7 +2181,7 @@
             function adoptState(data, rebasePending) {
                 const src = data || emptyRemote();
                 const next = {
-                    events: cloneData(src.events || []),
+                    events: sanitizeEvents(cloneData(src.events || [])),
                     idCounter: src.idCounter || 0,
                     currency: (src.currency && CURRENCIES[src.currency]) ? src.currency : 'RUB'
                 };
@@ -2206,7 +2254,7 @@
                     return tx.get(ref).then(snap => {
                         const remote = snap.exists ? snap.data() : emptyRemote();
                         const next = {
-                            events: cloneData(remote.events || []),
+                            events: sanitizeEvents(cloneData(remote.events || [])),
                             idCounter: remote.idCounter || 0,
                             currency: (remote.currency && CURRENCIES[remote.currency]) ? remote.currency : 'RUB'
                         };
@@ -2731,7 +2779,7 @@
                                 <span class="amount">${fmtMoney(Number(e.amount))} ${esc(curSymbol())}</span>
                                 ${detailsHtml}
                             </div>
-                            <span class="del" data-id="${e.id}">✕</span>
+                            <span class="del" data-id="${esc(e.id)}">✕</span>
                         `;
                         displayMode.querySelector('.del').addEventListener('click', (evt) => {
                             evt.stopPropagation();
@@ -3157,6 +3205,38 @@
 
                 const roots = members.filter(m => sameId(rootOf(m.id, members), m.id));
                 const transactions = [];
+
+                // «Упростить переводы»: важен только итоговый баланс каждого. Крупнейший должник платит
+                // крупнейшему получателю, пока все не в расчёте — переводов не больше, чем участников минус один,
+                // а круговые долги (Аня → Боря → Вова → Аня) исчезают.
+                if (simplifyDebts) {
+                    const balance = {};
+                    Object.keys(debts).forEach(d => Object.keys(debts[d]).forEach(c => {
+                        balance[d] = (balance[d] || 0) - debts[d][c];
+                        balance[c] = (balance[c] || 0) + debts[d][c];
+                    }));
+                    const cents = m => Math.round((balance[sid(m.id)] || 0) * 100);
+                    const payers = roots.map(m => ({ m, c: -cents(m) })).filter(x => x.c > 0).sort((a, b) => b.c - a.c);
+                    const takers = roots.map(m => ({ m, c: cents(m) })).filter(x => x.c > 0).sort((a, b) => b.c - a.c);
+                    let i = 0, j = 0;
+                    while (i < payers.length && j < takers.length) {
+                        const c = Math.min(payers[i].c, takers[j].c);
+                        if (c > 0) {
+                            transactions.push({
+                                fromId: payers[i].m.id, toId: takers[j].m.id,
+                                from: groupLabel(payers[i].m, members), to: groupLabel(takers[j].m, members),
+                                amount: c / 100
+                            });
+                        }
+                        payers[i].c -= c;
+                        takers[j].c -= c;
+                        if (payers[i].c === 0) i++;
+                        if (takers[j].c === 0) j++;
+                    }
+                    transactions.sort((x, y) => y.amount - x.amount);
+                    return transactions;
+                }
+
                 for (let i = 0; i < roots.length; i++) {
                     for (let j = i + 1; j < roots.length; j++) {
                         const a = roots[i], b = roots[j];
@@ -3384,6 +3464,15 @@
                 expenseAmount.addEventListener('input', () => { if (newSplitEditor) newSplitEditor.refresh(); });
 
                 copyResultBtn.addEventListener('click', copyResult);
+
+                const simplifyToggle = document.getElementById('simplifyToggle');
+                simplifyToggle.checked = simplifyDebts;
+                simplifyToggle.addEventListener('change', () => {
+                    simplifyDebts = simplifyToggle.checked;
+                    localStorage.setItem('simplifyDebts', simplifyDebts ? '1' : '0');
+                    updateResult();
+                    updateMyBalance();
+                });
                 addCoverBtn.addEventListener('click', addCover);
 
                 currentMemberSelect.addEventListener('change', () => {
